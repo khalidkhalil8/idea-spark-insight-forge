@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Lightbulb, ArrowRight } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { analyzeIdea } from '@/utils/ideaAnalysis';
 
 const IdeaInput = () => {
   const [idea, setIdea] = useState('');
@@ -18,12 +19,15 @@ const IdeaInput = () => {
     
     setLoading(true);
     
-    // Simulate API call / processing delay
+    // Analyze the idea and store results
+    const analysis = analyzeIdea(idea.trim());
+    sessionStorage.setItem('userIdea', idea);
+    sessionStorage.setItem('analysisResults', JSON.stringify(analysis));
+
+    // Simulate API delay
     setTimeout(() => {
-      // Store idea in session storage (could be replaced with proper state management)
-      sessionStorage.setItem('userIdea', idea);
       navigate('/results');
-    }, 3000);
+    }, 2000);
   };
 
   return (

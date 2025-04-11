@@ -7,27 +7,39 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Lightbulb, ArrowRight } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { analyzeIdea } from '@/utils/ideaAnalysis';
+import { useToast } from '@/hooks/use-toast';
 
 const IdeaInput = () => {
   const [idea, setIdea] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!idea.trim()) return;
     
     setLoading(true);
     
-    // Analyze the idea and store results
-    const analysis = analyzeIdea(idea.trim());
-    sessionStorage.setItem('userIdea', idea);
-    sessionStorage.setItem('analysisResults', JSON.stringify(analysis));
-
-    // Simulate API delay
-    setTimeout(() => {
+    try {
+      // Analyze the idea with real APIs
+      const analysis = await analyzeIdea(idea.trim());
+      
+      // Store results in session storage
+      sessionStorage.setItem('userIdea', idea);
+      sessionStorage.setItem('analysisResults', JSON.stringify(analysis));
+      
+      // Navigate to results page
       navigate('/results');
-    }, 2000);
+    } catch (error) {
+      console.error("Analysis error:", error);
+      toast({
+        title: "Analysis failed",
+        description: "We couldn't analyze your idea. Please try again.",
+        variant: "destructive",
+      });
+      setLoading(false);
+    }
   };
 
   return (

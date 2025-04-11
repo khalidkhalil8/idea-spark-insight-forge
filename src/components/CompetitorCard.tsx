@@ -10,6 +10,16 @@ export interface CompetitorProps {
 }
 
 const CompetitorCard: React.FC<CompetitorProps> = ({ name, description, website }) => {
+  // Format the domain for display
+  const getDomain = (url: string) => {
+    try {
+      const domain = new URL(url).hostname;
+      return domain.replace('www.', '');
+    } catch (e) {
+      return url;
+    }
+  };
+
   return (
     <Card className="shadow-card hover:shadow-lg transition-shadow duration-300">
       <CardContent className="p-6">
@@ -24,7 +34,8 @@ const CompetitorCard: React.FC<CompetitorProps> = ({ name, description, website 
             <ExternalLink className="h-5 w-5" />
           </a>
         </div>
-        <p className="mt-2 text-gray-600 text-sm">{description}</p>
+        <div className="mt-1 text-sm text-gray-500">{getDomain(website)}</div>
+        <p className="mt-2 text-gray-600 text-sm line-clamp-3">{description}</p>
         <a 
           href={website} 
           target="_blank" 

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -99,7 +100,7 @@ const Results = () => {
           
           <div className="mt-6 pt-6 border-t border-gray-100">
             <h3 className="font-medium text-gray-900 mb-3">Positioning Suggestions</h3>
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {analysisResults.positioningSuggestions.map((suggestion, index) => (
                 <li key={index} className="flex items-start">
                   <span className="flex-shrink-0 w-5 h-5 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center mr-2 mt-0.5">
@@ -115,7 +116,7 @@ const Results = () => {
 
       <h2 className="text-2xl font-bold mb-4 flex items-center text-gray-900">
         <Search className="mr-2 h-6 w-6 text-brand-600" />
-        Similar Competitors
+        Similar Companies & Products
       </h2>
       <div className="grid sm:grid-cols-2 gap-6 mb-10">
         {analysisResults.competitors.map((competitor) => (

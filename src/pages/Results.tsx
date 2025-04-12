@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -45,7 +44,6 @@ const Results = () => {
   const handleCopyResults = () => {
     if (!analysisResults) return;
     
-    // Create market gaps section based on available data
     const marketGapsText = analysisResults.marketGaps ? 
       `Market Gaps:\n${analysisResults.marketGaps.map((gap, i) => `${i+1}. ${gap}`).join('\n')}` :
       `Market Gap Analysis: ${analysisResults.gapAnalysis}`;
@@ -88,10 +86,10 @@ const Results = () => {
       </div>
 
       {analysisResults.isOpenAiFallback && (
-        <Alert variant="warning" className="mb-6 bg-amber-50 border-amber-200">
-          <AlertTriangle className="h-4 w-4 text-amber-500" />
-          <AlertTitle className="text-amber-700">OpenAI Analysis Failed</AlertTitle>
-          <AlertDescription className="text-amber-600">
+        <Alert variant="warning" className="mb-6">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>OpenAI Analysis Failed</AlertTitle>
+          <AlertDescription>
             {analysisResults.openAiError || "The AI analysis service encountered an error. Showing alternative analysis."}
           </AlertDescription>
         </Alert>

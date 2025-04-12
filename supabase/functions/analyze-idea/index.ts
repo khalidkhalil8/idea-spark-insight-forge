@@ -25,10 +25,12 @@ serve(async (req) => {
 
     // Get competitors using SerpAPI with improved query construction
     const competitors = await getCompetitors(idea);
+    console.log(`Found ${competitors.length} competitors`);
     
     try {
       // Get gap analysis using OpenAI with more specific prompting
       const analysisResult = await getGapAnalysis(idea, competitors);
+      console.log("Successfully generated analysis using OpenAI");
       
       return new Response(
         JSON.stringify({ ...analysisResult }),
@@ -43,7 +45,7 @@ serve(async (req) => {
         JSON.stringify({ 
           ...fallbackAnalysis, 
           isOpenAiFallback: true,
-          openAiError: openAiError.message
+          openAiError: openAiError.message || "OpenAI API not responding—please try again."
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );

@@ -36,4 +36,3 @@ export const analyzeIdea = async (idea: string): Promise<AnalysisResult> => {
     throw err;
   }
 };
-

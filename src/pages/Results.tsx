@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -90,7 +91,7 @@ const Results = () => {
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>OpenAI Analysis Failed</AlertTitle>
           <AlertDescription>
-            {analysisResults.openAiError || "The AI analysis service encountered an error. Showing alternative analysis."}
+            {analysisResults.openAiError || "OpenAI API not responding—please try again."}
           </AlertDescription>
         </Alert>
       )}

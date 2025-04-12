@@ -4,8 +4,9 @@ import { generateFallbackCompetitors } from "./fallbacks.ts";
 
 export async function getCompetitors(idea: string): Promise<Competitor[]> {
   try {
-    // More focused search query that targets direct competitors
-    const searchTerm = `top competitors in ${idea} industry site:.com | site:.co | site:.io | site:.ai`;
+    // Updated search query with more precise targeting of commercial sites
+    // and explicit exclusion of non-relevant content
+    const searchTerm = `top competitors for ${idea} site:.com | site:.co | site:.io -inurl:(blog | article | guide | how-to | news | review)`;
     console.log(`Searching for: "${searchTerm}"`);
     
     const response = await fetch(
@@ -20,6 +21,8 @@ export async function getCompetitors(idea: string): Promise<Competitor[]> {
     
     const data = await response.json();
     let organicResults = data.organic_results || [];
+    
+    console.log(`Found ${organicResults.length} initial results`);
     
     // Apply more stringent filtering for actual business websites
     let competitors = filterBusinessResults(organicResults, idea);
@@ -38,8 +41,8 @@ export async function getCompetitors(idea: string): Promise<Competitor[]> {
 
 async function getProductBasedCompetitors(idea: string): Promise<Competitor[]> {
   try {
-    // More specific product-focused search
-    const searchTerm = `companies offering ${idea} products services -reviews -blog -news`;
+    // More specific product-focused search with better exclusions
+    const searchTerm = `companies offering ${idea} products services -blog -news -review -guide -how`;
     console.log(`Trying product-based search: "${searchTerm}"`);
     
     const response = await fetch(
@@ -65,7 +68,7 @@ async function getProductBasedCompetitors(idea: string): Promise<Competitor[]> {
 }
 
 function filterBusinessResults(results: any[], idea: string): Competitor[] {
-  // Enhanced filtering to focus on actual businesses related to the idea
+  // Extract keywords from the idea for relevance checking
   const keywords = idea.toLowerCase().split(' ').filter(word => word.length > 3);
   
   return results
@@ -126,4 +129,3 @@ function filterBusinessResults(results: any[], idea: string): Competitor[] {
       return bRelevance - aRelevance;
     });
 }
-

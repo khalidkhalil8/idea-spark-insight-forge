@@ -4,32 +4,24 @@ import { generateFallbackAnalysis } from "./fallbacks.ts";
 
 export async function getGapAnalysis(idea: string, competitors: Competitor[]): Promise<AnalysisResult> {
   try {
-    console.log("Getting gap analysis from OpenAI");
+    console.log("Getting gap analysis from OpenAI for idea:", idea);
     
     // Create more detailed competitor descriptions for better analysis
     const competitorDescriptions = competitors
       .map(c => `${c.name}: ${c.description} (Website: ${c.website})`)
       .join("\n\n");
     
-    // Craft a more specific prompt for OpenAI to generate better results
+    // Updated prompt with the exact requirements specified
     const prompt = `
-      Analyze this business idea in detail:
-      
-      "${idea}"
+      Given the business idea "${idea}", identify 3 specific market gaps based on current industry trends, customer pain points, and emerging opportunities. Provide actionable insights tailored to the idea, citing specific aspects like features, target audience, or unmet needs. Avoid generic responses.
       
       Here are some potential competitors in this market space:
       ${competitorDescriptions}
       
-      Please provide:
-      
-      1. Identify 3 SPECIFIC market gaps based on current industry trends, customer pain points, and emerging opportunities that this business idea could address. Each gap should represent a concrete opportunity that existing competitors are not fully addressing. Be extremely specific and avoid generic statements.
-      
-      2. Four highly specific positioning suggestions tailored to this particular idea. Each suggestion should be actionable, practical, and directly related to the specific business domain of the idea. Reference specific aspects of the business idea and how they can be leveraged.
-      
-      Format your response as a JSON object with keys "marketGaps" (array of 3 strings, one for each specific gap identified) and "positioningSuggestions" (array of strings). Each market gap should be a clear, specific opportunity statement. Each positioning suggestion should be a single actionable statement.
-      
-      Your analysis must be tailored specifically to this business idea. Avoid generic advice that could apply to any business.
+      Format your response as a JSON object with keys "marketGaps" (array of 3 strings, one for each specific gap identified) and "positioningSuggestions" (array of 3 strings). Each market gap should be a clear, specific opportunity statement. Each positioning suggestion should reference specific market gaps and competitor weaknesses.
     `;
+    
+    console.log("Sending OpenAI request with prompt length:", prompt.length);
     
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -57,6 +49,7 @@ export async function getGapAnalysis(idea: string, competitors: Competitor[]): P
     }
     
     const data = await response.json();
+    console.log("OpenAI response received, parsing...");
     
     let result;
     try {
@@ -77,11 +70,13 @@ export async function getGapAnalysis(idea: string, competitors: Competitor[]): P
         result.marketGaps = result.marketGaps.slice(0, 3);
       }
       
-      // Ensure we have at least 4 positioning suggestions
-      if (result.positioningSuggestions.length < 4) {
-        while (result.positioningSuggestions.length < 4) {
+      // Ensure we have exactly 3 positioning suggestions
+      if (result.positioningSuggestions.length < 3) {
+        while (result.positioningSuggestions.length < 3) {
           result.positioningSuggestions.push("Develop a unique value proposition that differentiates from existing competitors.");
         }
+      } else if (result.positioningSuggestions.length > 3) {
+        result.positioningSuggestions = result.positioningSuggestions.slice(0, 3);
       }
       
     } catch (e) {
@@ -109,16 +104,17 @@ export async function getGapAnalysis(idea: string, competitors: Competitor[]): P
       
       result = {
         marketGaps: marketGaps.slice(0, 3),
-        positioningSuggestions: positioningSuggestions.length >= 4 ? 
-          positioningSuggestions.slice(0, 4) : 
+        positioningSuggestions: positioningSuggestions.length >= 3 ? 
+          positioningSuggestions.slice(0, 3) : 
           [
             "Target a specific customer segment with unique needs that competitors aren't addressing",
-            "Emphasize your idea's unique technical approach compared to existing solutions",
-            "Create strategic partnerships to overcome entry barriers in this market",
-            "Focus on solving specific pain points that existing competitors have missed"
+            "Focus on solving specific pain points that existing competitors have missed",
+            "Create strategic partnerships to overcome entry barriers in this market"
           ]
       };
     }
+    
+    console.log("Parsed OpenAI response:", result);
     
     return {
       competitors,
@@ -127,7 +123,6 @@ export async function getGapAnalysis(idea: string, competitors: Competitor[]): P
     };
   } catch (error) {
     console.error("Error getting gap analysis:", error);
-    // Throw the error to be handled by the calling function
     throw error;
   }
 }

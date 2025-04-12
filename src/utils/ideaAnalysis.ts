@@ -1,6 +1,5 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 
 export interface CompetitorProfile {
   name: string;
@@ -19,6 +18,7 @@ export interface AnalysisResult {
 
 export const analyzeIdea = async (idea: string): Promise<AnalysisResult> => {
   try {
+    console.log("Analyzing idea:", idea);
     const { data, error } = await supabase.functions.invoke('analyze-idea', {
       body: { idea }
     });
@@ -28,9 +28,12 @@ export const analyzeIdea = async (idea: string): Promise<AnalysisResult> => {
       throw new Error(`Analysis failed: ${error.message}`);
     }
 
+    // Log the received data to help with debugging
+    console.log("Analysis results:", data);
     return data as AnalysisResult;
   } catch (err) {
     console.error("Error analyzing idea:", err);
     throw err;
   }
 };
+

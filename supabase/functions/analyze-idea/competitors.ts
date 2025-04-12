@@ -4,12 +4,12 @@ import { generateFallbackCompetitors } from "./fallbacks.ts";
 
 export async function getCompetitors(idea: string): Promise<Competitor[]> {
   try {
-    // First search attempt specifically for competitors
-    const searchTerm = `competitors of ${idea}`;
+    // More focused search query that targets direct competitors
+    const searchTerm = `top competitors in ${idea} industry site:.com | site:.co | site:.io | site:.ai`;
     console.log(`Searching for: "${searchTerm}"`);
     
     const response = await fetch(
-      `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(searchTerm)}&num=10&api_key=${serpApiKey}`
+      `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(searchTerm)}&num=15&api_key=${serpApiKey}`
     );
     
     if (!response.ok) {
@@ -21,11 +21,11 @@ export async function getCompetitors(idea: string): Promise<Competitor[]> {
     const data = await response.json();
     let organicResults = data.organic_results || [];
     
-    // Filter for actual business websites
-    let competitors = filterBusinessResults(organicResults);
+    // Apply more stringent filtering for actual business websites
+    let competitors = filterBusinessResults(organicResults, idea);
     
     if (competitors.length < 4) {
-      // If not enough competitors found, try a more direct product search
+      // Try alternative search if not enough competitors found
       return await getProductBasedCompetitors(idea);
     }
     
@@ -38,8 +38,8 @@ export async function getCompetitors(idea: string): Promise<Competitor[]> {
 
 async function getProductBasedCompetitors(idea: string): Promise<Competitor[]> {
   try {
-    // Try a more direct product/service-focused search
-    const searchTerm = `best ${idea} companies products services`;
+    // More specific product-focused search
+    const searchTerm = `companies offering ${idea} products services -reviews -blog -news`;
     console.log(`Trying product-based search: "${searchTerm}"`);
     
     const response = await fetch(
@@ -53,8 +53,8 @@ async function getProductBasedCompetitors(idea: string): Promise<Competitor[]> {
     const data = await response.json();
     const organicResults = data.organic_results || [];
     
-    // Filter for actual business websites
-    const competitors = filterBusinessResults(organicResults);
+    // Filter results with the business idea context
+    const competitors = filterBusinessResults(organicResults, idea);
     
     console.log(`Found ${competitors.length} competitors with product-based search`);
     return competitors.length > 0 ? competitors.slice(0, 5) : generateFallbackCompetitors(idea);
@@ -64,8 +64,10 @@ async function getProductBasedCompetitors(idea: string): Promise<Competitor[]> {
   }
 }
 
-function filterBusinessResults(results: any[]): Competitor[] {
-  // Filter to focus on business/commercial websites
+function filterBusinessResults(results: any[], idea: string): Competitor[] {
+  // Enhanced filtering to focus on actual businesses related to the idea
+  const keywords = idea.toLowerCase().split(' ').filter(word => word.length > 3);
+  
   return results
     .filter(result => 
       result.title && 
@@ -73,21 +75,23 @@ function filterBusinessResults(results: any[]): Competitor[] {
       result.link && 
       // Exclude informational and non-commercial websites
       !result.link.includes("wikipedia.org") &&
-      !result.link.includes("linkedin.com") &&
+      !result.link.includes("linkedin.com/pulse") &&
+      !result.link.includes("medium.com") &&
       !result.link.includes("gartner.com") &&
       !result.link.includes("forbes.com") &&
       !result.link.includes("capterra.com") &&
       !result.link.includes("g2.com") &&
       !result.link.includes("youtube.com") &&
       !result.link.includes("news.") &&
+      !result.link.includes("blog.") &&
       !result.link.includes("reddit.com") &&
       !result.link.includes("quora.com") &&
-      !result.link.includes("blog.") &&
       !result.link.includes("techcrunch.com") &&
       !result.title.toLowerCase().includes("top 10") &&
       !result.title.toLowerCase().includes("best") &&
       !result.title.toLowerCase().includes("comparison") &&
-      !result.title.toLowerCase().includes("vs")
+      !result.title.toLowerCase().includes("vs") &&
+      !result.title.toLowerCase().includes("review")
     )
     .map(result => {
       // Extract company name more carefully
@@ -106,5 +110,20 @@ function filterBusinessResults(results: any[]): Competitor[] {
         description: result.snippet,
         website: result.link
       };
+    })
+    // Sort results to prioritize those that seem most relevant to the business idea
+    .sort((a, b) => {
+      const aRelevance = keywords.filter(kw => 
+        a.name.toLowerCase().includes(kw) || 
+        a.description.toLowerCase().includes(kw)
+      ).length;
+      
+      const bRelevance = keywords.filter(kw => 
+        b.name.toLowerCase().includes(kw) || 
+        b.description.toLowerCase().includes(kw)
+      ).length;
+      
+      return bRelevance - aRelevance;
     });
 }
+

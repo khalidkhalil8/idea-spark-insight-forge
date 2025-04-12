@@ -13,7 +13,7 @@ export async function getGapAnalysis(idea: string, competitors: Competitor[]): P
     
     // Craft a more specific prompt for OpenAI to generate better results
     const prompt = `
-      I need a detailed market gap analysis for this business idea:
+      Analyze this business idea in detail:
       
       "${idea}"
       
@@ -22,11 +22,13 @@ export async function getGapAnalysis(idea: string, competitors: Competitor[]): P
       
       Please provide:
       
-      1. A specific market gap analysis (3-4 sentences) that identifies the exact market opportunities this idea could exploit that the competitors aren't addressing. Include specific niches, technologies, or approaches that could give this idea a competitive edge.
+      1. Identify 3 SPECIFIC market gaps based on current industry trends, customer pain points, and emerging opportunities that this business idea could address. Each gap should represent a concrete opportunity that existing competitors are not fully addressing. Be extremely specific and avoid generic statements.
       
       2. Four highly specific positioning suggestions tailored to this particular idea. Each suggestion should be actionable, practical, and directly related to the specific business domain of the idea. Reference specific aspects of the business idea and how they can be leveraged.
       
-      Format your response as a JSON object with keys "gapAnalysis" (string) and "positioningSuggestions" (array of strings). Do not include placeholders, generic advice, or vague statements - everything must be specific to this exact business idea and its competitive landscape.
+      Format your response as a JSON object with keys "gapAnalysis" (string) and "positioningSuggestions" (array of strings). The gapAnalysis should be a 3-4 sentence paragraph summarizing the 3 specific market gaps. Each positioning suggestion should be a single actionable statement.
+      
+      Your analysis must be tailored specifically to this business idea. Avoid generic advice that could apply to any business.
     `;
     
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -40,7 +42,7 @@ export async function getGapAnalysis(idea: string, competitors: Competitor[]): P
         messages: [
           { 
             role: "system", 
-            content: "You are a specialized business consultant with expertise in market analysis, competitive positioning, and business strategy. Your job is to provide highly specific, tailored, and actionable insights about business ideas. Avoid generic advice at all costs." 
+            content: "You are a specialized market research analyst with deep industry knowledge across sectors. Your expertise is identifying specific market gaps and opportunities for new business ideas. You provide detailed, actionable insights tailored to each unique business concept. Never provide generic advice - all feedback must directly relate to the specific idea being analyzed." 
           },
           { role: "user", content: prompt }
         ],

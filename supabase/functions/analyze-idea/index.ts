@@ -4,6 +4,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { getCompetitors } from "./competitors.ts";
 import { getGapAnalysis } from "./analysis.ts";
 import { corsHeaders } from "./utils.ts";
+import { generateFallbackAnalysis } from "./fallbacks.ts";
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -25,13 +26,28 @@ serve(async (req) => {
     // Get competitors using SerpAPI with improved query construction
     const competitors = await getCompetitors(idea);
     
-    // Get gap analysis using OpenAI with more specific prompting
-    const analysisResult = await getGapAnalysis(idea, competitors);
-
-    return new Response(
-      JSON.stringify({ ...analysisResult }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    try {
+      // Get gap analysis using OpenAI with more specific prompting
+      const analysisResult = await getGapAnalysis(idea, competitors);
+      
+      return new Response(
+        JSON.stringify({ ...analysisResult }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    } catch (openAiError) {
+      console.error("OpenAI analysis failed, using fallback:", openAiError.message);
+      
+      // If OpenAI fails, use fallback but indicate this in the response
+      const fallbackAnalysis = await generateFallbackAnalysis(idea, competitors);
+      return new Response(
+        JSON.stringify({ 
+          ...fallbackAnalysis, 
+          isOpenAiFallback: true,
+          openAiError: openAiError.message
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
   } catch (error) {
     console.error("Error:", error.message);
     return new Response(

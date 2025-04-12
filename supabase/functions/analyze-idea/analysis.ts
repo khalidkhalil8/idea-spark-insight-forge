@@ -26,7 +26,7 @@ export async function getGapAnalysis(idea: string, competitors: Competitor[]): P
       
       2. Four highly specific positioning suggestions tailored to this particular idea. Each suggestion should be actionable, practical, and directly related to the specific business domain of the idea. Reference specific aspects of the business idea and how they can be leveraged.
       
-      Format your response as a JSON object with keys "gapAnalysis" (string) and "positioningSuggestions" (array of strings). The gapAnalysis should be a 3-4 sentence paragraph summarizing the 3 specific market gaps. Each positioning suggestion should be a single actionable statement.
+      Format your response as a JSON object with keys "marketGaps" (array of 3 strings, one for each specific gap identified) and "positioningSuggestions" (array of strings). Each market gap should be a clear, specific opportunity statement. Each positioning suggestion should be a single actionable statement.
       
       Your analysis must be tailored specifically to this business idea. Avoid generic advice that could apply to any business.
     `;
@@ -62,39 +62,72 @@ export async function getGapAnalysis(idea: string, competitors: Competitor[]): P
     try {
       // Try to parse the content as JSON
       result = JSON.parse(data.choices[0].message.content);
+      
+      // Validate the response structure
+      if (!result.marketGaps || !Array.isArray(result.marketGaps) || !result.positioningSuggestions || !Array.isArray(result.positioningSuggestions)) {
+        throw new Error("Invalid response format from OpenAI");
+      }
+      
+      // Ensure we have exactly 3 market gaps
+      if (result.marketGaps.length < 3) {
+        while (result.marketGaps.length < 3) {
+          result.marketGaps.push("Further market research is needed to identify additional opportunities in this space.");
+        }
+      } else if (result.marketGaps.length > 3) {
+        result.marketGaps = result.marketGaps.slice(0, 3);
+      }
+      
+      // Ensure we have at least 4 positioning suggestions
+      if (result.positioningSuggestions.length < 4) {
+        while (result.positioningSuggestions.length < 4) {
+          result.positioningSuggestions.push("Develop a unique value proposition that differentiates from existing competitors.");
+        }
+      }
+      
     } catch (e) {
       // If parsing fails, create a structured object from the text response
-      console.log("Could not parse OpenAI response as JSON, extracting manually");
+      console.log("Could not parse OpenAI response as JSON, extracting manually:", e);
       const content = data.choices[0].message.content;
       
-      // Extract gap analysis
-      const gapAnalysisMatch = content.match(/gap analysis.*?:?\s*["']?(.*?)["']?(\n|$)/i);
-      const gapAnalysis = gapAnalysisMatch ? gapAnalysisMatch[1].trim() : 
-        "Based on the market analysis, there appears to be a significant opportunity to differentiate this idea by addressing specific customer needs that current solutions overlook.";
+      // Extract market gaps by looking for numbered items or sections
+      const gapMatches = content.match(/(?:gap|opportunity)\s*(?:\d+|:|-)?\s*(.*?)(?:\n|$)/gi) || [];
+      const marketGaps = gapMatches
+        .map(match => match.replace(/^(?:gap|opportunity)\s*(?:\d+|:|-)?\s*/i, '').trim())
+        .filter(gap => gap.length > 10)
+        .slice(0, 3);
       
       // Extract positioning suggestions
-      const suggestions = content.match(/\d+\.\s*(.*?)(\n|$)/g) || [];
-      const positioningSuggestions = suggestions.map(s => s.replace(/^\d+\.\s*/, '').trim());
+      const suggestions = content.match(/\d+\.\s*(.*?)(?:\n|$)/g) || [];
+      const positioningSuggestions = suggestions
+        .map(s => s.replace(/^\d+\.\s*/, '').trim())
+        .filter(s => s.length > 10);
+      
+      // Ensure we have exactly 3 market gaps
+      while (marketGaps.length < 3) {
+        marketGaps.push("Further market research is needed to identify additional opportunities in this space.");
+      }
       
       result = {
-        gapAnalysis,
-        positioningSuggestions: positioningSuggestions.length >= 4 ? positioningSuggestions : [
-          "Target a specific customer segment with unique needs that competitors aren't addressing",
-          "Emphasize your idea's unique technical approach compared to existing solutions",
-          "Create strategic partnerships to overcome entry barriers in this market",
-          "Focus on solving specific pain points that existing competitors have missed"
-        ]
+        marketGaps: marketGaps.slice(0, 3),
+        positioningSuggestions: positioningSuggestions.length >= 4 ? 
+          positioningSuggestions.slice(0, 4) : 
+          [
+            "Target a specific customer segment with unique needs that competitors aren't addressing",
+            "Emphasize your idea's unique technical approach compared to existing solutions",
+            "Create strategic partnerships to overcome entry barriers in this market",
+            "Focus on solving specific pain points that existing competitors have missed"
+          ]
       };
     }
     
     return {
       competitors,
-      gapAnalysis: result.gapAnalysis,
+      marketGaps: result.marketGaps,
       positioningSuggestions: result.positioningSuggestions
     };
   } catch (error) {
     console.error("Error getting gap analysis:", error);
-    // Fallback to generating gap analysis
-    return generateFallbackAnalysis(idea, competitors);
+    // Throw the error to be handled by the calling function
+    throw error;
   }
 }

@@ -3,10 +3,11 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Lightbulb, Search, TrendingUp, ExternalLink, Save } from 'lucide-react';
+import { Lightbulb, Search, TrendingUp, ExternalLink, Save, AlertTriangle } from 'lucide-react';
 import CompetitorCard from '@/components/CompetitorCard';
 import EmailCaptureModal from '@/components/EmailCaptureModal';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface AnalysisResults {
   competitors: {
@@ -14,8 +15,11 @@ interface AnalysisResults {
     description: string;
     website: string;
   }[];
-  gapAnalysis: string;
+  marketGaps?: string[];
+  gapAnalysis?: string;
   positioningSuggestions: string[];
+  isOpenAiFallback?: boolean;
+  openAiError?: string;
 }
 
 const Results = () => {
@@ -39,16 +43,23 @@ const Results = () => {
   }, [navigate]);
 
   const handleCopyResults = () => {
+    if (!analysisResults) return;
+    
+    // Create market gaps section based on available data
+    const marketGapsText = analysisResults.marketGaps ? 
+      `Market Gaps:\n${analysisResults.marketGaps.map((gap, i) => `${i+1}. ${gap}`).join('\n')}` :
+      `Market Gap Analysis: ${analysisResults.gapAnalysis}`;
+    
     const resultsText = `
       My Idea: ${userIdea}
       
-      Market Gap Analysis: ${analysisResults?.gapAnalysis}
+      ${marketGapsText}
       
       Competitors:
-      ${analysisResults?.competitors.map(c => `- ${c.name}: ${c.description} (${c.website})`).join('\n')}
+      ${analysisResults.competitors.map(c => `- ${c.name}: ${c.description} (${c.website})`).join('\n')}
       
       Positioning Suggestions:
-      ${analysisResults?.positioningSuggestions.map(s => `- ${s}`).join('\n')}
+      ${analysisResults.positioningSuggestions.map((s, i) => `${i+1}. ${s}`).join('\n')}
     `;
     
     navigator.clipboard.writeText(resultsText).then(() => {
@@ -76,6 +87,16 @@ const Results = () => {
         </h1>
       </div>
 
+      {analysisResults.isOpenAiFallback && (
+        <Alert variant="warning" className="mb-6 bg-amber-50 border-amber-200">
+          <AlertTriangle className="h-4 w-4 text-amber-500" />
+          <AlertTitle className="text-amber-700">OpenAI Analysis Failed</AlertTitle>
+          <AlertDescription className="text-amber-600">
+            {analysisResults.openAiError || "The AI analysis service encountered an error. Showing alternative analysis."}
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Card className="mb-8 shadow-card">
         <CardContent className="p-6">
           <h2 className="text-xl font-medium mb-3 flex items-center text-gray-900">
@@ -92,11 +113,27 @@ const Results = () => {
         <TrendingUp className="mr-2 h-6 w-6 text-brand-600" />
         Market Gap Analysis
       </h2>
+
       <Card className="mb-8 shadow-card border-l-4 border-l-brand-500">
         <CardContent className="p-6">
-          <p className="text-gray-700 leading-relaxed">
-            {analysisResults.gapAnalysis}
-          </p>
+          {analysisResults.marketGaps ? (
+            <div className="space-y-4">
+              {analysisResults.marketGaps.map((gap, index) => (
+                <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 w-6 h-6 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                      {index + 1}
+                    </div>
+                    <p className="text-gray-700">{gap}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-700 leading-relaxed">
+              {analysisResults.gapAnalysis}
+            </p>
+          )}
           
           <div className="mt-6 pt-6 border-t border-gray-100">
             <h3 className="font-medium text-gray-900 mb-3">Positioning Suggestions</h3>

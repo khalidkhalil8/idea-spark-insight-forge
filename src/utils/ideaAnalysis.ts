@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export interface CompetitorProfile {
   name: string;
@@ -9,8 +10,11 @@ export interface CompetitorProfile {
 
 export interface AnalysisResult {
   competitors: CompetitorProfile[];
-  gapAnalysis: string;
+  marketGaps?: string[];
+  gapAnalysis?: string;
   positioningSuggestions: string[];
+  isOpenAiFallback?: boolean;
+  openAiError?: string;
 }
 
 export const analyzeIdea = async (idea: string): Promise<AnalysisResult> => {

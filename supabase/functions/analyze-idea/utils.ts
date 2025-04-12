@@ -17,6 +17,7 @@ export interface Competitor {
 
 export interface AnalysisResult {
   competitors: Competitor[];
-  gapAnalysis: string;
+  marketGaps?: string[];
+  gapAnalysis?: string;
   positioningSuggestions: string[];
 }

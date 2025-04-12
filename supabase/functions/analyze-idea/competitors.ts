@@ -4,14 +4,8 @@ import { generateFallbackCompetitors } from "./fallbacks.ts";
 
 export async function getCompetitors(idea: string): Promise<Competitor[]> {
   try {
-    // Create a more targeted search query to find actual products and companies
-    // Extract key concepts from the idea
-    const keyTerms = idea.split(" ")
-      .filter(word => word.length > 3 && !['with', 'that', 'this', 'from', 'their', 'have', 'will'].includes(word.toLowerCase()))
-      .slice(0, 5);
-    
-    // Add business-specific terms to improve results quality
-    const searchTerm = `${keyTerms.join(" ")} top companies competitors products startups`;
+    // First search attempt specifically for competitors
+    const searchTerm = `competitors of ${idea}`;
     console.log(`Searching for: "${searchTerm}"`);
     
     const response = await fetch(
@@ -25,105 +19,92 @@ export async function getCompetitors(idea: string): Promise<Competitor[]> {
     }
     
     const data = await response.json();
-    
-    // Extract organic results and ensure we're getting actual companies/products
     let organicResults = data.organic_results || [];
     
-    // Filter more strictly to find actual company/product pages
-    const competitors = organicResults
-      .filter(result => 
-        result.title && 
-        result.snippet && 
-        result.link && 
-        !result.link.includes("wikipedia.org") &&
-        !result.link.includes("linkedin.com") &&
-        !result.link.includes("gartner.com") &&
-        !result.link.includes("forbes.com") &&
-        !result.link.includes("capterra.com") &&
-        !result.link.includes("g2.com") &&
-        !result.link.includes("youtube.com") &&
-        !result.link.includes("news.")
-      )
-      .slice(0, 5)
-      .map(result => {
-        // Extract company name more carefully
-        let name = result.title;
-        
-        // Remove common suffixes like "- Product", "| Official Site", etc.
-        name = name.split(' - ')[0].split(' | ')[0].split(': ')[0];
-        
-        // Handle domains in company names
-        if (name.includes('.com') || name.includes('.io') || name.includes('.ai')) {
-          name = name.split('.')[0];
-        }
-        
-        return {
-          name: name,
-          description: result.snippet,
-          website: result.link
-        };
-      });
+    // Filter for actual business websites
+    let competitors = filterBusinessResults(organicResults);
     
-    console.log(`Found ${competitors.length} competitors`);
-    
-    if (competitors.length < 3) {
-      // If we don't have enough companies, try a different search approach
-      return await getAlternativeCompetitors(idea);
+    if (competitors.length < 4) {
+      // If not enough competitors found, try a more direct product search
+      return await getProductBasedCompetitors(idea);
     }
     
-    return competitors;
+    return competitors.slice(0, 5);
   } catch (error) {
     console.error("Error getting competitors:", error);
-    // Fallback to alternative search if SerpAPI fails
-    return await getAlternativeCompetitors(idea);
+    return await getProductBasedCompetitors(idea);
   }
 }
 
-async function getAlternativeCompetitors(idea: string): Promise<Competitor[]> {
+async function getProductBasedCompetitors(idea: string): Promise<Competitor[]> {
   try {
-    // Try a more direct product-focused search
-    const searchTerm = `best ${idea.split(" ").slice(0, 3).join(" ")} products companies`;
-    console.log(`Trying alternative search: "${searchTerm}"`);
+    // Try a more direct product/service-focused search
+    const searchTerm = `best ${idea} companies products services`;
+    console.log(`Trying product-based search: "${searchTerm}"`);
     
     const response = await fetch(
-      `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(searchTerm)}&num=10&api_key=${serpApiKey}`
+      `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(searchTerm)}&num=15&api_key=${serpApiKey}`
     );
     
     if (!response.ok) {
-      throw new Error(`Alternative SerpAPI request failed: ${response.status}`);
+      throw new Error(`Product-based SerpAPI request failed: ${response.status}`);
     }
     
     const data = await response.json();
     const organicResults = data.organic_results || [];
     
-    // Process the results similar to above
-    const competitors = organicResults
-      .filter(result => 
-        result.title && 
-        result.snippet && 
-        result.link &&
-        !result.link.includes("wikipedia.org") &&
-        !result.link.includes("linkedin.com")
-      )
-      .slice(0, 5)
-      .map(result => {
-        let name = result.title.split(' - ')[0].split(' | ')[0];
-        
-        if (name.includes('.com') || name.includes('.io') || name.includes('.ai')) {
-          name = name.split('.')[0];
-        }
-        
-        return {
-          name: name,
-          description: result.snippet,
-          website: result.link
-        };
-      });
-      
-    console.log(`Found ${competitors.length} competitors with alternative search`);
-    return competitors.length > 0 ? competitors : generateFallbackCompetitors(idea);
+    // Filter for actual business websites
+    const competitors = filterBusinessResults(organicResults);
+    
+    console.log(`Found ${competitors.length} competitors with product-based search`);
+    return competitors.length > 0 ? competitors.slice(0, 5) : generateFallbackCompetitors(idea);
   } catch (error) {
-    console.error("Error in alternative competitor search:", error);
+    console.error("Error in product-based competitor search:", error);
     return generateFallbackCompetitors(idea);
   }
+}
+
+function filterBusinessResults(results: any[]): Competitor[] {
+  // Filter to focus on business/commercial websites
+  return results
+    .filter(result => 
+      result.title && 
+      result.snippet && 
+      result.link && 
+      // Exclude informational and non-commercial websites
+      !result.link.includes("wikipedia.org") &&
+      !result.link.includes("linkedin.com") &&
+      !result.link.includes("gartner.com") &&
+      !result.link.includes("forbes.com") &&
+      !result.link.includes("capterra.com") &&
+      !result.link.includes("g2.com") &&
+      !result.link.includes("youtube.com") &&
+      !result.link.includes("news.") &&
+      !result.link.includes("reddit.com") &&
+      !result.link.includes("quora.com") &&
+      !result.link.includes("blog.") &&
+      !result.link.includes("techcrunch.com") &&
+      !result.title.toLowerCase().includes("top 10") &&
+      !result.title.toLowerCase().includes("best") &&
+      !result.title.toLowerCase().includes("comparison") &&
+      !result.title.toLowerCase().includes("vs")
+    )
+    .map(result => {
+      // Extract company name more carefully
+      let name = result.title;
+      
+      // Remove common suffixes like "- Product", "| Official Site", etc.
+      name = name.split(' - ')[0].split(' | ')[0].split(': ')[0];
+      
+      // Remove common website suffixes
+      if (name.includes('.com') || name.includes('.io') || name.includes('.ai')) {
+        name = name.replace(/\.(com|io|ai|org|net)/, '');
+      }
+      
+      return {
+        name: name.trim(),
+        description: result.snippet,
+        website: result.link
+      };
+    });
 }

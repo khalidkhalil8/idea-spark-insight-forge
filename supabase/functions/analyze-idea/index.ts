@@ -22,6 +22,7 @@ serve(async (req) => {
     }
 
     console.log(`Analyzing idea: ${idea}`);
+    let searchQuery = "";
 
     try {
       // Get competitors using SerpAPI with improved query construction
@@ -34,7 +35,7 @@ serve(async (req) => {
         console.log("Successfully generated analysis using OpenAI");
         
         return new Response(
-          JSON.stringify({ ...analysisResult }),
+          JSON.stringify({ ...analysisResult, searchQuery }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       } catch (openAiError) {

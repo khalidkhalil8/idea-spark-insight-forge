@@ -4,8 +4,8 @@ import { generateFallbackCompetitors } from "./fallbacks.ts";
 
 export async function getCompetitors(idea: string): Promise<Competitor[]> {
   try {
-    // Updated search query focusing on companies providing services/products
-    const searchTerm = `companies providing ${idea} site:.com | site:.co | site:.io -inurl:(blog | article | guide | how-to | news | review | forum | wiki | login | signup)`;
+    // Updated search query focusing on actual companies, apps, and products
+    const searchTerm = `${idea} companies | apps | products site:.com | site:.co | site:.io -inurl:(blog | article | guide | how-to | news | review | podcast | forum | wiki | login | signup | about | pricing)`;
     console.log(`Searching for competitors with query: "${searchTerm}"`);
     
     const response = await fetch(
@@ -41,14 +41,13 @@ export async function getCompetitors(idea: string): Promise<Competitor[]> {
 
 async function getAlternativeCompetitors(idea: string): Promise<Competitor[]> {
   try {
-    // More specific product-focused search
-    const keywords = idea.toLowerCase().split(' ').filter(word => 
-      word.length > 3 && !['the', 'and', 'that', 'with', 'for', 'this'].includes(word)
-    );
+    // Extract keywords for a more focused search
+    const keywords = idea.toLowerCase().split(' ')
+      .filter(word => word.length > 3 && !['the', 'and', 'that', 'with', 'for', 'this'].includes(word))
+      .slice(0, 3);
     
-    // Use the most relevant keywords from the idea
-    const relevantKeywords = keywords.slice(0, 3).join(' ');
-    const searchTerm = `${relevantKeywords} companies products services -blog -news -review -guide -forum -wiki`;
+    // More specific focused search using core keywords from the idea
+    const searchTerm = `${keywords.join(' ')} software | app | platform | tool | solution site:.com | site:.co | site:.io -inurl:(blog | news | review | guide)`;
     console.log(`Trying alternative search: "${searchTerm}"`);
     
     const response = await fetch(
@@ -79,34 +78,48 @@ function filterBusinessResults(results: any[], idea: string): Competitor[] {
     word.length > 3 && !['the', 'and', 'that', 'with', 'for', 'this', 'from'].includes(word)
   );
   
+  // Additional irrelevant domains to filter out
+  const irrelevantDomains = [
+    'wikipedia.org', 'linkedin.com', 'medium.com', 'gartner.com', 
+    'forbes.com', 'capterra.com', 'g2.com', 'youtube.com', 'news.',
+    'blog.', 'reddit.com', 'quora.com', 'techcrunch.com', 'github.com',
+    'stackoverflow.com', 'cnn.com', 'bbc.com', 'nytimes.com', 'wsj.com',
+    'marketwatch.com', 'thestreet.com', 'bloomberg.com', 'fastcompany.com',
+    'entrepreneur.com', 'huffpost.com', 'businessinsider.com', 'inc.com'
+  ];
+  
+  const irrelevantTitlePatterns = [
+    'top', 'best', 'comparison', 'vs', 'versus', 'review', 'list', 'guide',
+    'how to', 'tutorial', 'tips', 'trends', 'news', 'overview', 'what is'
+  ];
+  
   return results
-    .filter(result => 
-      result.title && 
-      result.snippet && 
-      result.link && 
-      // Exclude informational and non-commercial websites
-      !result.link.includes("wikipedia.org") &&
-      !result.link.includes("linkedin.com/pulse") &&
-      !result.link.includes("medium.com") &&
-      !result.link.includes("gartner.com") &&
-      !result.link.includes("forbes.com") &&
-      !result.link.includes("capterra.com") &&
-      !result.link.includes("g2.com") &&
-      !result.link.includes("youtube.com") &&
-      !result.link.includes("news.") &&
-      !result.link.includes("blog.") &&
-      !result.link.includes("reddit.com") &&
-      !result.link.includes("quora.com") &&
-      !result.link.includes("techcrunch.com") &&
-      !result.link.includes("github.com") &&
-      !result.link.includes("stackoverflow.com") &&
-      !result.title.toLowerCase().includes("top 10") &&
-      !result.title.toLowerCase().includes("best") &&
-      !result.title.toLowerCase().includes("comparison") &&
-      !result.title.toLowerCase().includes("vs") &&
-      !result.title.toLowerCase().includes("review") &&
-      !result.title.toLowerCase().includes("list")
-    )
+    .filter(result => {
+      if (!result.title || !result.snippet || !result.link) {
+        return false;
+      }
+      
+      const titleLower = result.title.toLowerCase();
+      const snippetLower = result.snippet.toLowerCase();
+      const linkLower = result.link.toLowerCase();
+      
+      // Filter out irrelevant domains
+      if (irrelevantDomains.some(domain => linkLower.includes(domain))) {
+        return false;
+      }
+      
+      // Filter out irrelevant title patterns
+      if (irrelevantTitlePatterns.some(pattern => titleLower.includes(pattern))) {
+        return false;
+      }
+      
+      // Check if the title or snippet contains at least one keyword from the idea
+      const hasRelevantKeyword = keywords.some(kw => 
+        titleLower.includes(kw) || snippetLower.includes(kw)
+      );
+      
+      return hasRelevantKeyword;
+    })
     .map(result => {
       // Extract company name more carefully
       let name = result.title;

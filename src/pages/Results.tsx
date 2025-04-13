@@ -21,6 +21,7 @@ interface AnalysisResults {
   isOpenAiFallback?: boolean;
   openAiError?: string;
   serpApiError?: string;
+  searchQuery?: string;
 }
 
 const Results = () => {
@@ -104,6 +105,15 @@ const Results = () => {
           <AlertTitle>Competitor Search Issue</AlertTitle>
           <AlertDescription>
             {analysisResults.serpApiError || "Unable to find relevant competitors—using fallbacks."}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Display the search query used if available */}
+      {analysisResults.searchQuery && (
+        <Alert variant="info" className="mb-6">
+          <AlertDescription>
+            Search query used: "{analysisResults.searchQuery}"
           </AlertDescription>
         </Alert>
       )}

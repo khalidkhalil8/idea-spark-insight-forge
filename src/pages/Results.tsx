@@ -111,7 +111,7 @@ const Results = () => {
 
       {/* Display the search query used if available */}
       {analysisResults.searchQuery && (
-        <Alert variant="info" className="mb-6">
+        <Alert variant="default" className="mb-6">
           <AlertDescription>
             Search query used: "{analysisResults.searchQuery}"
           </AlertDescription>

@@ -4,8 +4,8 @@ import { generateFallbackCompetitors } from "./fallbacks.ts";
 
 export async function getCompetitors(idea: string): Promise<Competitor[]> {
   try {
-    // Improved search query specifically focusing on competitors
-    const searchTerm = `${idea} competitors site:.com | site:.co | site:.io -inurl:(blog | article | guide | how-to | news | review | podcast | forum | wiki | login | signup | about | pricing)`;
+    // Improved search query with apps keyword for better app/product results
+    const searchTerm = `${idea} apps | competitors site:.com | site:.co | site:.io -inurl:(blog | article | guide | how-to | news | review | podcast | forum | wiki | login | signup | about | pricing)`;
     console.log(`Searching for competitors with query: "${searchTerm}"`);
     
     const response = await fetch(
@@ -41,13 +41,11 @@ export async function getCompetitors(idea: string): Promise<Competitor[]> {
 
 async function getAlternativeCompetitors(idea: string): Promise<Competitor[]> {
   try {
-    // Extract keywords for a more focused search
-    const keywords = idea.toLowerCase().split(' ')
-      .filter(word => word.length > 3 && !['the', 'and', 'that', 'with', 'for', 'this'].includes(word))
-      .slice(0, 3);
+    // Extract more specific keywords from the idea
+    const keywords = extractKeywords(idea);
     
-    // More specific focused search using core keywords from the idea
-    const searchTerm = `${keywords.join(' ')} software | app | platform | tool | solution competitors site:.com | site:.co | site:.io -inurl:(blog | news | review | guide)`;
+    // More specific focused search using core keywords and additional product terms
+    const searchTerm = `${keywords.join(' ')} software | app | platform | tool | solution | product site:.com | site:.co | site:.io -inurl:(blog | news | review | guide)`;
     console.log(`Trying alternative search: "${searchTerm}"`);
     
     const response = await fetch(
@@ -72,11 +70,31 @@ async function getAlternativeCompetitors(idea: string): Promise<Competitor[]> {
   }
 }
 
-function filterBusinessResults(results: any[], idea: string): Competitor[] {
-  // Extract keywords from the idea for relevance checking
-  const keywords = idea.toLowerCase().split(' ').filter(word => 
+function extractKeywords(idea: string): string[] {
+  // List of important business-related terms that should be prioritized
+  const businessTerms = ['tracking', 'validating', 'business', 'ideas', 'api', 'apis', 'ai', 
+                          'assistant', 'automation', 'platform', 'analytics', 'management'];
+  
+  // Extract keywords, prioritizing business terms
+  const words = idea.toLowerCase().split(' ');
+  const extractedKeywords = words.filter(word => 
     word.length > 3 && !['the', 'and', 'that', 'with', 'for', 'this', 'from'].includes(word)
   );
+  
+  // Prioritize business terms
+  const prioritizedKeywords = extractedKeywords.filter(word => 
+    businessTerms.includes(word)
+  );
+  
+  // If we found prioritized terms, use them; otherwise use the original filtered words
+  return prioritizedKeywords.length > 0 
+    ? prioritizedKeywords.slice(0, 3) 
+    : extractedKeywords.slice(0, 3);
+}
+
+function filterBusinessResults(results: any[], idea: string): Competitor[] {
+  // Extract keywords from the idea for relevance checking
+  const keywords = extractKeywords(idea);
   
   // Additional irrelevant domains to filter out
   const irrelevantDomains = [

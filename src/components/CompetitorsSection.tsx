@@ -11,22 +11,15 @@ interface Competitor {
 
 interface CompetitorsSectionProps {
   competitors: Competitor[];
-  searchQuery?: string;
 }
 
-const CompetitorsSection: React.FC<CompetitorsSectionProps> = ({ competitors, searchQuery }) => {
+const CompetitorsSection: React.FC<CompetitorsSectionProps> = ({ competitors }) => {
   return (
     <>
       <h2 className="text-2xl font-bold mb-4 flex items-center text-gray-900">
         <Search className="mr-2 h-6 w-6 text-brand-600" />
         Competitors
       </h2>
-      
-      {searchQuery && (
-        <div className="mb-4 text-sm text-gray-500 bg-gray-50 p-3 rounded-md">
-          <strong>Search query:</strong> {searchQuery}
-        </div>
-      )}
       
       <div className="grid sm:grid-cols-2 gap-6 mb-10">
         {competitors.length > 0 ? (

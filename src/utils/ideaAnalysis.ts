@@ -15,7 +15,6 @@ export interface AnalysisResult {
   isOpenAiFallback?: boolean;
   openAiError?: string;
   serpApiError?: string;
-  searchQuery?: string;
 }
 
 export const analyzeIdea = async (idea: string): Promise<AnalysisResult> => {

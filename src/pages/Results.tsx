@@ -22,7 +22,6 @@ interface AnalysisResults {
   isOpenAiFallback?: boolean;
   openAiError?: string;
   serpApiError?: string;
-  searchQuery?: string;
 }
 
 const Results = () => {
@@ -93,7 +92,6 @@ const Results = () => {
         isOpenAiFallback={analysisResults.isOpenAiFallback}
         openAiError={analysisResults.openAiError}
         serpApiError={analysisResults.serpApiError}
-        searchQuery={analysisResults.searchQuery}
       />
 
       <IdeaDisplay userIdea={userIdea} />
@@ -106,7 +104,6 @@ const Results = () => {
 
       <CompetitorsSection 
         competitors={analysisResults.competitors} 
-        searchQuery={analysisResults.searchQuery}
       />
 
       <ResultActions 

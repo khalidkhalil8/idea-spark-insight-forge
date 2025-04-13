@@ -22,7 +22,8 @@ serve(async (req) => {
     }
 
     console.log(`Analyzing idea: ${idea}`);
-    let searchQuery = `${idea} competitors site:.com | site:.co | site:.io -inurl:(blog | article | guide | how-to | news | review | podcast | forum | wiki | login | signup | about | pricing)`;
+    let searchQuery = `${idea} apps | competitors site:.com | site:.co | site:.io -inurl:(blog | article | guide | how-to | news | review | podcast | forum | wiki | login | signup | about | pricing)`;
+    console.log(`Search query used: ${searchQuery}`);
 
     try {
       // Get competitors using SerpAPI with improved query construction
@@ -34,8 +35,9 @@ serve(async (req) => {
         const analysisResult = await getGapAnalysis(idea, competitors);
         console.log("Successfully generated analysis using OpenAI");
         
+        // Don't include searchQuery in the response anymore
         return new Response(
-          JSON.stringify({ ...analysisResult, searchQuery }),
+          JSON.stringify({ ...analysisResult }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       } catch (openAiError) {
@@ -47,8 +49,7 @@ serve(async (req) => {
           JSON.stringify({ 
             ...fallbackAnalysis, 
             isOpenAiFallback: true,
-            openAiError: `OpenAI Error: ${openAiError.message}` || "OpenAI API not responding—please try again.",
-            searchQuery
+            openAiError: `OpenAI Error: ${openAiError.message}` || "OpenAI API not responding—please try again."
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
@@ -67,8 +68,7 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ 
             ...analysisResult,
-            serpApiError: `SerpAPI Error: ${serpApiError.message}`,
-            searchQuery
+            serpApiError: `SerpAPI Error: ${serpApiError.message}`
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
@@ -80,8 +80,7 @@ serve(async (req) => {
             ...fallbackAnalysis, 
             isOpenAiFallback: true,
             openAiError: `OpenAI Error: ${openAiError.message}`,
-            serpApiError: `SerpAPI Error: ${serpApiError.message}`,
-            searchQuery
+            serpApiError: `SerpAPI Error: ${serpApiError.message}`
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );

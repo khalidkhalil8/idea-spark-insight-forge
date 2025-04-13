@@ -22,7 +22,7 @@ serve(async (req) => {
     }
 
     console.log(`Analyzing idea: ${idea}`);
-    let searchQuery = "";
+    let searchQuery = `${idea} competitors site:.com | site:.co | site:.io -inurl:(blog | article | guide | how-to | news | review | podcast | forum | wiki | login | signup | about | pricing)`;
 
     try {
       // Get competitors using SerpAPI with improved query construction
@@ -47,7 +47,8 @@ serve(async (req) => {
           JSON.stringify({ 
             ...fallbackAnalysis, 
             isOpenAiFallback: true,
-            openAiError: `OpenAI Error: ${openAiError.message}` || "OpenAI API not responding—please try again."
+            openAiError: `OpenAI Error: ${openAiError.message}` || "OpenAI API not responding—please try again.",
+            searchQuery
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
@@ -66,7 +67,8 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ 
             ...analysisResult,
-            serpApiError: `SerpAPI Error: ${serpApiError.message}`
+            serpApiError: `SerpAPI Error: ${serpApiError.message}`,
+            searchQuery
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
@@ -78,7 +80,8 @@ serve(async (req) => {
             ...fallbackAnalysis, 
             isOpenAiFallback: true,
             openAiError: `OpenAI Error: ${openAiError.message}`,
-            serpApiError: `SerpAPI Error: ${serpApiError.message}`
+            serpApiError: `SerpAPI Error: ${serpApiError.message}`,
+            searchQuery
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );

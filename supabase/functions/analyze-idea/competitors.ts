@@ -4,8 +4,8 @@ import { generateFallbackCompetitors } from "./fallbacks.ts";
 
 export async function getCompetitors(idea: string): Promise<Competitor[]> {
   try {
-    // Updated search query focusing on actual companies, apps, and products
-    const searchTerm = `${idea} companies | apps | products site:.com | site:.co | site:.io -inurl:(blog | article | guide | how-to | news | review | podcast | forum | wiki | login | signup | about | pricing)`;
+    // Improved search query specifically focusing on competitors
+    const searchTerm = `${idea} competitors site:.com | site:.co | site:.io -inurl:(blog | article | guide | how-to | news | review | podcast | forum | wiki | login | signup | about | pricing)`;
     console.log(`Searching for competitors with query: "${searchTerm}"`);
     
     const response = await fetch(
@@ -47,7 +47,7 @@ async function getAlternativeCompetitors(idea: string): Promise<Competitor[]> {
       .slice(0, 3);
     
     // More specific focused search using core keywords from the idea
-    const searchTerm = `${keywords.join(' ')} software | app | platform | tool | solution site:.com | site:.co | site:.io -inurl:(blog | news | review | guide)`;
+    const searchTerm = `${keywords.join(' ')} software | app | platform | tool | solution competitors site:.com | site:.co | site:.io -inurl:(blog | news | review | guide)`;
     console.log(`Trying alternative search: "${searchTerm}"`);
     
     const response = await fetch(

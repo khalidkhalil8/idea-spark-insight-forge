@@ -104,7 +104,10 @@ const Results = () => {
         positioningSuggestions={analysisResults.positioningSuggestions}
       />
 
-      <CompetitorsSection competitors={analysisResults.competitors} />
+      <CompetitorsSection 
+        competitors={analysisResults.competitors} 
+        searchQuery={analysisResults.searchQuery}
+      />
 
       <ResultActions 
         onEmailCapture={() => setIsEmailModalOpen(true)} 

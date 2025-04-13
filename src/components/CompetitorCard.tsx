@@ -7,9 +7,10 @@ export interface CompetitorProps {
   name: string;
   description: string;
   website: string;
+  index?: number;
 }
 
-const CompetitorCard: React.FC<CompetitorProps> = ({ name, description, website }) => {
+const CompetitorCard: React.FC<CompetitorProps> = ({ name, description, website, index }) => {
   // Format the domain for display
   const getDomain = (url: string) => {
     try {
@@ -24,7 +25,10 @@ const CompetitorCard: React.FC<CompetitorProps> = ({ name, description, website 
     <Card className="shadow-card hover:shadow-lg transition-shadow duration-300">
       <CardContent className="p-6">
         <div className="flex justify-between items-start">
-          <h3 className="text-lg font-medium text-gray-900">{name}</h3>
+          <h3 className="text-lg font-medium text-gray-900">
+            {index && <span className="inline-flex items-center justify-center w-6 h-6 bg-brand-100 text-brand-700 rounded-full mr-2">{index}</span>}
+            {name}
+          </h3>
           <a 
             href={website} 
             target="_blank" 

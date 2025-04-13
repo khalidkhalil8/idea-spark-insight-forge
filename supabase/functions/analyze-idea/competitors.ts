@@ -4,10 +4,9 @@ import { generateFallbackCompetitors } from "./fallbacks.ts";
 
 export async function getCompetitors(idea: string): Promise<Competitor[]> {
   try {
-    // Updated search query with more precise targeting of commercial sites
-    // and explicit exclusion of non-relevant content
-    const searchTerm = `top competitors for ${idea} site:.com | site:.co | site:.io -inurl:(blog | article | guide | how-to | news | review)`;
-    console.log(`Searching for: "${searchTerm}"`);
+    // Updated search query focusing on companies providing services/products
+    const searchTerm = `companies providing ${idea} site:.com | site:.co | site:.io -inurl:(blog | article | guide | how-to | news | review | forum | wiki | login | signup)`;
+    console.log(`Searching for competitors with query: "${searchTerm}"`);
     
     const response = await fetch(
       `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(searchTerm)}&num=15&api_key=${serpApiKey}`
@@ -22,35 +21,42 @@ export async function getCompetitors(idea: string): Promise<Competitor[]> {
     const data = await response.json();
     let organicResults = data.organic_results || [];
     
-    console.log(`Found ${organicResults.length} initial results`);
+    console.log(`Found ${organicResults.length} initial results from SerpAPI`);
     
     // Apply more stringent filtering for actual business websites
     let competitors = filterBusinessResults(organicResults, idea);
     
     if (competitors.length < 4) {
       // Try alternative search if not enough competitors found
-      return await getProductBasedCompetitors(idea);
+      return await getAlternativeCompetitors(idea);
     }
     
+    console.log(`Returning ${Math.min(competitors.length, 5)} filtered competitors`);
     return competitors.slice(0, 5);
   } catch (error) {
     console.error("Error getting competitors:", error);
-    return await getProductBasedCompetitors(idea);
+    return await getAlternativeCompetitors(idea);
   }
 }
 
-async function getProductBasedCompetitors(idea: string): Promise<Competitor[]> {
+async function getAlternativeCompetitors(idea: string): Promise<Competitor[]> {
   try {
-    // More specific product-focused search with better exclusions
-    const searchTerm = `companies offering ${idea} products services -blog -news -review -guide -how`;
-    console.log(`Trying product-based search: "${searchTerm}"`);
+    // More specific product-focused search
+    const keywords = idea.toLowerCase().split(' ').filter(word => 
+      word.length > 3 && !['the', 'and', 'that', 'with', 'for', 'this'].includes(word)
+    );
+    
+    // Use the most relevant keywords from the idea
+    const relevantKeywords = keywords.slice(0, 3).join(' ');
+    const searchTerm = `${relevantKeywords} companies products services -blog -news -review -guide -forum -wiki`;
+    console.log(`Trying alternative search: "${searchTerm}"`);
     
     const response = await fetch(
       `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(searchTerm)}&num=15&api_key=${serpApiKey}`
     );
     
     if (!response.ok) {
-      throw new Error(`Product-based SerpAPI request failed: ${response.status}`);
+      throw new Error(`Alternative SerpAPI request failed: ${response.status}`);
     }
     
     const data = await response.json();
@@ -59,17 +65,19 @@ async function getProductBasedCompetitors(idea: string): Promise<Competitor[]> {
     // Filter results with the business idea context
     const competitors = filterBusinessResults(organicResults, idea);
     
-    console.log(`Found ${competitors.length} competitors with product-based search`);
+    console.log(`Found ${competitors.length} competitors with alternative search`);
     return competitors.length > 0 ? competitors.slice(0, 5) : generateFallbackCompetitors(idea);
   } catch (error) {
-    console.error("Error in product-based competitor search:", error);
+    console.error("Error in alternative competitor search:", error);
     return generateFallbackCompetitors(idea);
   }
 }
 
 function filterBusinessResults(results: any[], idea: string): Competitor[] {
   // Extract keywords from the idea for relevance checking
-  const keywords = idea.toLowerCase().split(' ').filter(word => word.length > 3);
+  const keywords = idea.toLowerCase().split(' ').filter(word => 
+    word.length > 3 && !['the', 'and', 'that', 'with', 'for', 'this', 'from'].includes(word)
+  );
   
   return results
     .filter(result => 
@@ -90,11 +98,14 @@ function filterBusinessResults(results: any[], idea: string): Competitor[] {
       !result.link.includes("reddit.com") &&
       !result.link.includes("quora.com") &&
       !result.link.includes("techcrunch.com") &&
+      !result.link.includes("github.com") &&
+      !result.link.includes("stackoverflow.com") &&
       !result.title.toLowerCase().includes("top 10") &&
       !result.title.toLowerCase().includes("best") &&
       !result.title.toLowerCase().includes("comparison") &&
       !result.title.toLowerCase().includes("vs") &&
-      !result.title.toLowerCase().includes("review")
+      !result.title.toLowerCase().includes("review") &&
+      !result.title.toLowerCase().includes("list")
     )
     .map(result => {
       // Extract company name more carefully
@@ -105,7 +116,7 @@ function filterBusinessResults(results: any[], idea: string): Competitor[] {
       
       // Remove common website suffixes
       if (name.includes('.com') || name.includes('.io') || name.includes('.ai')) {
-        name = name.replace(/\.(com|io|ai|org|net)/, '');
+        name = name.replace(/\.(com|io|ai|org|net)/g, '');
       }
       
       return {

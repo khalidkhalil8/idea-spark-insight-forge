@@ -20,6 +20,7 @@ interface AnalysisResults {
   positioningSuggestions: string[];
   isOpenAiFallback?: boolean;
   openAiError?: string;
+  serpApiError?: string;
 }
 
 const Results = () => {
@@ -86,12 +87,23 @@ const Results = () => {
         </h1>
       </div>
 
+      {/* Display API errors if they exist */}
       {analysisResults.isOpenAiFallback && (
         <Alert variant="warning" className="mb-6">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>OpenAI Analysis Failed</AlertTitle>
           <AlertDescription>
             {analysisResults.openAiError || "OpenAI API not responding—please try again."}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {analysisResults.serpApiError && (
+        <Alert variant="warning" className="mb-6">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Competitor Search Issue</AlertTitle>
+          <AlertDescription>
+            {analysisResults.serpApiError || "Unable to find relevant competitors—using fallbacks."}
           </AlertDescription>
         </Alert>
       )}
@@ -130,7 +142,7 @@ const Results = () => {
             </div>
           ) : (
             <p className="text-gray-700 leading-relaxed">
-              {analysisResults.gapAnalysis}
+              {analysisResults.gapAnalysis || "Unable to generate market gap analysis."}
             </p>
           )}
           

@@ -6,19 +6,22 @@ export async function getGapAnalysis(idea: string, competitors: Competitor[]): P
   try {
     console.log("Getting gap analysis from OpenAI for idea:", idea);
     
-    // Create more detailed competitor descriptions for better analysis
+    // Create competitor descriptions for context
     const competitorDescriptions = competitors
       .map(c => `${c.name}: ${c.description} (Website: ${c.website})`)
       .join("\n\n");
     
-    // Updated prompt with the exact requirements specified
+    // Updated prompt with explicit JSON formatting instructions
     const prompt = `
-      Given the business idea "${idea}", identify 3 specific market gaps based on current industry trends, customer pain points, and emerging opportunities. Provide actionable insights tailored to the idea, citing specific aspects like features, target audience, or unmet needs. Avoid generic responses.
+      Return a JSON object with 3 specific market gaps for the business idea "${idea}", based on industry trends, customer pain points, and opportunities. Each gap is a string, max 50 words, tailored to the idea's features.
       
       Here are some potential competitors in this market space:
       ${competitorDescriptions}
       
-      Format your response as a JSON object with keys "marketGaps" (array of 3 strings, one for each specific gap identified) and "positioningSuggestions" (array of 3 strings). Each market gap should be a clear, specific opportunity statement. Each positioning suggestion should reference specific market gaps and competitor weaknesses.
+      Your response MUST be a valid JSON object with exactly this format:
+      {"marketGaps": ["Lack of mobile tools for X", "No affordable Y for Z", "Unmet need for A in B"], "positioningSuggestions": ["Suggestion 1", "Suggestion 2", "Suggestion 3"]}
+      
+      Do not include any markdown, text, or explanations outside the JSON object. The JSON object should be the only thing in your response.
     `;
     
     console.log("Sending OpenAI request with prompt length:", prompt.length);
@@ -34,11 +37,11 @@ export async function getGapAnalysis(idea: string, competitors: Competitor[]): P
         messages: [
           { 
             role: "system", 
-            content: "You are a specialized market research analyst with deep industry knowledge across sectors. Your expertise is identifying specific market gaps and opportunities for new business ideas. You provide detailed, actionable insights tailored to each unique business concept. Never provide generic advice - all feedback must directly relate to the specific idea being analyzed." 
+            content: "You are an API that returns only valid JSON. No markdown, no text, only the JSON object requested by the user in exactly the format specified." 
           },
           { role: "user", content: prompt }
         ],
-        temperature: 0.7
+        temperature: 0.5
       })
     });
     
@@ -49,78 +52,52 @@ export async function getGapAnalysis(idea: string, competitors: Competitor[]): P
     }
     
     const data = await response.json();
-    console.log("OpenAI response received, parsing...");
+    console.log("OpenAI raw response:", data.choices[0].message.content);
     
-    let result;
     try {
+      // Clean the response to ensure it's valid JSON
+      const cleanedContent = data.choices[0].message.content.trim()
+        .replace(/^```json/g, '')
+        .replace(/```$/g, '')
+        .trim();
+      
+      console.log("Cleaned JSON content:", cleanedContent);
+      
       // Try to parse the content as JSON
-      result = JSON.parse(data.choices[0].message.content);
+      const result = JSON.parse(cleanedContent);
       
       // Validate the response structure
       if (!result.marketGaps || !Array.isArray(result.marketGaps) || !result.positioningSuggestions || !Array.isArray(result.positioningSuggestions)) {
-        throw new Error("Invalid response format from OpenAI");
+        throw new Error("Invalid response format from OpenAI: missing marketGaps or positioningSuggestions");
       }
       
       // Ensure we have exactly 3 market gaps
-      if (result.marketGaps.length < 3) {
-        while (result.marketGaps.length < 3) {
-          result.marketGaps.push("Further market research is needed to identify additional opportunities in this space.");
-        }
-      } else if (result.marketGaps.length > 3) {
+      while (result.marketGaps.length < 3) {
+        result.marketGaps.push("Further market research is needed to identify additional opportunities in this space.");
+      }
+      if (result.marketGaps.length > 3) {
         result.marketGaps = result.marketGaps.slice(0, 3);
       }
       
       // Ensure we have exactly 3 positioning suggestions
-      if (result.positioningSuggestions.length < 3) {
-        while (result.positioningSuggestions.length < 3) {
-          result.positioningSuggestions.push("Develop a unique value proposition that differentiates from existing competitors.");
-        }
-      } else if (result.positioningSuggestions.length > 3) {
+      while (result.positioningSuggestions.length < 3) {
+        result.positioningSuggestions.push("Develop a unique value proposition that differentiates from existing competitors.");
+      }
+      if (result.positioningSuggestions.length > 3) {
         result.positioningSuggestions = result.positioningSuggestions.slice(0, 3);
       }
       
-    } catch (e) {
-      // If parsing fails, create a structured object from the text response
-      console.log("Could not parse OpenAI response as JSON, extracting manually:", e);
-      const content = data.choices[0].message.content;
+      console.log("Parsed OpenAI response:", result);
       
-      // Extract market gaps by looking for numbered items or sections
-      const gapMatches = content.match(/(?:gap|opportunity)\s*(?:\d+|:|-)?\s*(.*?)(?:\n|$)/gi) || [];
-      const marketGaps = gapMatches
-        .map(match => match.replace(/^(?:gap|opportunity)\s*(?:\d+|:|-)?\s*/i, '').trim())
-        .filter(gap => gap.length > 10)
-        .slice(0, 3);
-      
-      // Extract positioning suggestions
-      const suggestions = content.match(/\d+\.\s*(.*?)(?:\n|$)/g) || [];
-      const positioningSuggestions = suggestions
-        .map(s => s.replace(/^\d+\.\s*/, '').trim())
-        .filter(s => s.length > 10);
-      
-      // Ensure we have exactly 3 market gaps
-      while (marketGaps.length < 3) {
-        marketGaps.push("Further market research is needed to identify additional opportunities in this space.");
-      }
-      
-      result = {
-        marketGaps: marketGaps.slice(0, 3),
-        positioningSuggestions: positioningSuggestions.length >= 3 ? 
-          positioningSuggestions.slice(0, 3) : 
-          [
-            "Target a specific customer segment with unique needs that competitors aren't addressing",
-            "Focus on solving specific pain points that existing competitors have missed",
-            "Create strategic partnerships to overcome entry barriers in this market"
-          ]
+      return {
+        competitors,
+        marketGaps: result.marketGaps,
+        positioningSuggestions: result.positioningSuggestions
       };
+    } catch (parseError) {
+      console.error("Error parsing OpenAI response:", parseError, "Content:", data.choices[0].message.content);
+      throw new Error(`Failed to parse OpenAI response: ${parseError.message}`);
     }
-    
-    console.log("Parsed OpenAI response:", result);
-    
-    return {
-      competitors,
-      marketGaps: result.marketGaps,
-      positioningSuggestions: result.positioningSuggestions
-    };
   } catch (error) {
     console.error("Error getting gap analysis:", error);
     throw error;

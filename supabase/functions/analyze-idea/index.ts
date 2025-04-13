@@ -23,32 +23,65 @@ serve(async (req) => {
 
     console.log(`Analyzing idea: ${idea}`);
 
-    // Get competitors using SerpAPI with improved query construction
-    const competitors = await getCompetitors(idea);
-    console.log(`Found ${competitors.length} competitors`);
-    
     try {
-      // Get gap analysis using OpenAI with more specific prompting
-      const analysisResult = await getGapAnalysis(idea, competitors);
-      console.log("Successfully generated analysis using OpenAI");
+      // Get competitors using SerpAPI with improved query construction
+      const competitors = await getCompetitors(idea);
+      console.log(`Found ${competitors.length} competitors`);
       
-      return new Response(
-        JSON.stringify({ ...analysisResult }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    } catch (openAiError) {
-      console.error("OpenAI analysis failed, using fallback:", openAiError.message);
+      try {
+        // Get gap analysis using OpenAI with specific JSON formatting
+        const analysisResult = await getGapAnalysis(idea, competitors);
+        console.log("Successfully generated analysis using OpenAI");
+        
+        return new Response(
+          JSON.stringify({ ...analysisResult }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      } catch (openAiError) {
+        console.error("OpenAI analysis failed:", openAiError.message);
+        
+        // If OpenAI fails, use fallback but indicate this in the response
+        const fallbackAnalysis = await generateFallbackAnalysis(idea, competitors);
+        return new Response(
+          JSON.stringify({ 
+            ...fallbackAnalysis, 
+            isOpenAiFallback: true,
+            openAiError: `OpenAI Error: ${openAiError.message}` || "OpenAI API not responding—please try again."
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    } catch (serpApiError) {
+      console.error("SerpAPI error:", serpApiError.message);
       
-      // If OpenAI fails, use fallback but indicate this in the response
-      const fallbackAnalysis = await generateFallbackAnalysis(idea, competitors);
-      return new Response(
-        JSON.stringify({ 
-          ...fallbackAnalysis, 
-          isOpenAiFallback: true,
-          openAiError: openAiError.message || "OpenAI API not responding—please try again."
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      // If SerpAPI fails but we still want to attempt OpenAI analysis with fallback competitors
+      const fallbackCompetitors = [
+        { name: "No competitors found", description: "SerpAPI search failed", website: "#" }
+      ];
+      
+      try {
+        // Try OpenAI analysis with fallback competitors
+        const analysisResult = await getGapAnalysis(idea, fallbackCompetitors);
+        return new Response(
+          JSON.stringify({ 
+            ...analysisResult,
+            serpApiError: `SerpAPI Error: ${serpApiError.message}`
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      } catch (openAiError) {
+        // Both APIs failed
+        const fallbackAnalysis = generateFallbackAnalysis(idea, fallbackCompetitors);
+        return new Response(
+          JSON.stringify({ 
+            ...fallbackAnalysis, 
+            isOpenAiFallback: true,
+            openAiError: `OpenAI Error: ${openAiError.message}`,
+            serpApiError: `SerpAPI Error: ${serpApiError.message}`
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
   } catch (error) {
     console.error("Error:", error.message);

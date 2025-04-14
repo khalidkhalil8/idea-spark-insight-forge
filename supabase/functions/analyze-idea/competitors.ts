@@ -4,8 +4,8 @@ import { generateFallbackCompetitors } from "./fallbacks.ts";
 
 export async function getCompetitors(idea: string): Promise<Competitor[]> {
   try {
-    // Improved search query with apps keyword for better app/product results
-    const searchTerm = `${idea} apps | competitors site:.com | site:.co | site:.io -inurl:(blog | article | guide | how-to | news | review | podcast | forum | wiki | login | signup | about | pricing)`;
+    // Improved search query focused on apps and excluding informational pages
+    const searchTerm = `${idea} apps site:.com | site:.co | site:.io -inurl:(blog | article | guide | how-to | news | review | podcast | forum | wiki | login | signup | about | pricing | resources)`;
     console.log(`Searching for competitors with query: "${searchTerm}"`);
     
     const response = await fetch(
@@ -23,7 +23,7 @@ export async function getCompetitors(idea: string): Promise<Competitor[]> {
     
     console.log(`Found ${organicResults.length} initial results from SerpAPI`);
     
-    // Apply more stringent filtering for actual business websites
+    // Apply more stringent filtering for actual business websites and apps
     let competitors = filterBusinessResults(organicResults, idea);
     
     if (competitors.length < 4) {
@@ -41,11 +41,11 @@ export async function getCompetitors(idea: string): Promise<Competitor[]> {
 
 async function getAlternativeCompetitors(idea: string): Promise<Competitor[]> {
   try {
-    // Extract more specific keywords from the idea
+    // Extract more specific keywords from the idea for better targeting
     const keywords = extractKeywords(idea);
     
-    // More specific focused search using core keywords and additional product terms
-    const searchTerm = `${keywords.join(' ')} software | app | platform | tool | solution | product site:.com | site:.co | site:.io -inurl:(blog | news | review | guide)`;
+    // More targeted search focusing on product-related terms
+    const searchTerm = `${keywords.join(' ')} software | app | platform | tool | product site:.com | site:.co | site:.io -inurl:(blog | news | review | guide | resources)`;
     console.log(`Trying alternative search: "${searchTerm}"`);
     
     const response = await fetch(
@@ -59,7 +59,7 @@ async function getAlternativeCompetitors(idea: string): Promise<Competitor[]> {
     const data = await response.json();
     const organicResults = data.organic_results || [];
     
-    // Filter results with the business idea context
+    // Apply stricter filtering for the alternative search
     const competitors = filterBusinessResults(organicResults, idea);
     
     console.log(`Found ${competitors.length} competitors with alternative search`);
@@ -73,7 +73,7 @@ async function getAlternativeCompetitors(idea: string): Promise<Competitor[]> {
 function extractKeywords(idea: string): string[] {
   // List of important business-related terms that should be prioritized
   const businessTerms = ['tracking', 'validating', 'business', 'ideas', 'api', 'apis', 'ai', 
-                          'assistant', 'automation', 'platform', 'analytics', 'management'];
+                          'assistant', 'automation', 'platform', 'analytics', 'management', 'app'];
   
   // Extract keywords, prioritizing business terms
   const words = idea.toLowerCase().split(' ');
@@ -103,14 +103,17 @@ function filterBusinessResults(results: any[], idea: string): Competitor[] {
     'blog.', 'reddit.com', 'quora.com', 'techcrunch.com', 'github.com',
     'stackoverflow.com', 'cnn.com', 'bbc.com', 'nytimes.com', 'wsj.com',
     'marketwatch.com', 'thestreet.com', 'bloomberg.com', 'fastcompany.com',
-    'entrepreneur.com', 'huffpost.com', 'businessinsider.com', 'inc.com'
+    'entrepreneur.com', 'huffpost.com', 'businessinsider.com', 'inc.com',
+    'reviews', 'comparison', 'wiki'
   ];
   
   const irrelevantTitlePatterns = [
     'top', 'best', 'comparison', 'vs', 'versus', 'review', 'list', 'guide',
-    'how to', 'tutorial', 'tips', 'trends', 'news', 'overview', 'what is'
+    'how to', 'tutorial', 'tips', 'trends', 'news', 'overview', 'what is',
+    'resources', 'examples', 'ideas', 'case studies'
   ];
   
+  // Filter results more strictly to focus on actual products and platforms
   return results
     .filter(result => {
       if (!result.title || !result.snippet || !result.link) {
@@ -131,12 +134,19 @@ function filterBusinessResults(results: any[], idea: string): Competitor[] {
         return false;
       }
       
+      // Check for product-related terms in title or snippet
+      const productTerms = ['app', 'tool', 'platform', 'software', 'solution', 'product'];
+      const hasProductTerm = productTerms.some(term => 
+        titleLower.includes(term) || snippetLower.includes(term)
+      );
+      
       // Check if the title or snippet contains at least one keyword from the idea
       const hasRelevantKeyword = keywords.some(kw => 
         titleLower.includes(kw) || snippetLower.includes(kw)
       );
       
-      return hasRelevantKeyword;
+      // Prioritize results that seem like actual products/platforms
+      return hasProductTerm || hasRelevantKeyword;
     })
     .map(result => {
       // Extract company name more carefully

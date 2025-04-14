@@ -22,7 +22,7 @@ serve(async (req) => {
     }
 
     console.log(`Analyzing idea: ${idea}`);
-    let searchQuery = `${idea} apps | competitors site:.com | site:.co | site:.io -inurl:(blog | article | guide | how-to | news | review | podcast | forum | wiki | login | signup | about | pricing)`;
+    let searchQuery = `${idea} apps site:.com | site:.co | site:.io -inurl:(blog | article | guide | how-to | news | review | podcast | forum | wiki | login | signup | about | pricing | resources)`;
     console.log(`Search query used: ${searchQuery}`);
 
     try {
@@ -35,7 +35,7 @@ serve(async (req) => {
         const analysisResult = await getGapAnalysis(idea, competitors);
         console.log("Successfully generated analysis using OpenAI");
         
-        // Don't include searchQuery in the response anymore
+        // Return without including searchQuery in the response
         return new Response(
           JSON.stringify({ ...analysisResult }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }

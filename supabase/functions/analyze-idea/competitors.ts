@@ -1,11 +1,18 @@
-
 import { serpApiKey, Competitor, corsHeaders } from "./utils.ts";
 import { generateFallbackCompetitors } from "./fallbacks.ts";
 
 export async function getCompetitors(idea: string): Promise<Competitor[]> {
   try {
-    // Improved search query focused on apps and excluding informational pages
-    const searchTerm = `${idea} apps site:.com | site:.co | site:.io -inurl:(blog | article | guide | how-to | news | review | podcast | forum | wiki | login | signup | about | pricing | resources)`;
+    // Extract keywords for better targeting fitness-specific ideas
+    const keywords = extractKeywords(idea);
+    const fitnessKeywords = ['fitness', 'workout', 'exercise', 'training', 'gym'];
+    
+    // Check if the idea is fitness-related and add specific keywords if needed
+    const isFITNESS = fitnessKeywords.some(kw => idea.toLowerCase().includes(kw));
+    const extraKeywords = isFITNESS ? 'AI form feedback' : '';
+    
+    // Improved search query focused on apps with fitness specialization if relevant
+    const searchTerm = `${idea} apps ${extraKeywords} site:.com | site:.co | site:.io -inurl:(blog | article | guide | how-to | news | review | podcast | forum | wiki | login | signup | about | pricing | resources)`;
     console.log(`Searching for competitors with query: "${searchTerm}"`);
     
     const response = await fetch(
@@ -23,10 +30,10 @@ export async function getCompetitors(idea: string): Promise<Competitor[]> {
     
     console.log(`Found ${organicResults.length} initial results from SerpAPI`);
     
-    // Apply more stringent filtering for actual business websites and apps
-    let competitors = filterBusinessResults(organicResults, idea);
+    // Apply more stringent filtering and deduplication
+    let competitors = filterAndDeduplicateResults(organicResults, idea);
     
-    if (competitors.length < 4) {
+    if (competitors.length < 5) {
       // Try alternative search if not enough competitors found
       return await getAlternativeCompetitors(idea);
     }
@@ -43,9 +50,16 @@ async function getAlternativeCompetitors(idea: string): Promise<Competitor[]> {
   try {
     // Extract more specific keywords from the idea for better targeting
     const keywords = extractKeywords(idea);
+    const fitnessKeywords = ['fitness', 'workout', 'exercise', 'training', 'gym'];
+    const isFITNESS = fitnessKeywords.some(kw => idea.toLowerCase().includes(kw));
+    
+    // Add fitness-specific terms if relevant
+    const domainSpecificTerms = isFITNESS ? 
+      'workout app | fitness tracker | exercise form | training app | gym tracker' : 
+      'software | app | platform | tool | product';
     
     // More targeted search focusing on product-related terms
-    const searchTerm = `${keywords.join(' ')} software | app | platform | tool | product site:.com | site:.co | site:.io -inurl:(blog | news | review | guide | resources)`;
+    const searchTerm = `${keywords.join(' ')} ${domainSpecificTerms} site:.com | site:.co | site:.io -inurl:(blog | news | review | guide | resources)`;
     console.log(`Trying alternative search: "${searchTerm}"`);
     
     const response = await fetch(
@@ -59,8 +73,8 @@ async function getAlternativeCompetitors(idea: string): Promise<Competitor[]> {
     const data = await response.json();
     const organicResults = data.organic_results || [];
     
-    // Apply stricter filtering for the alternative search
-    const competitors = filterBusinessResults(organicResults, idea);
+    // Apply stricter filtering for the alternative search, with deduplication
+    const competitors = filterAndDeduplicateResults(organicResults, idea);
     
     console.log(`Found ${competitors.length} competitors with alternative search`);
     return competitors.length > 0 ? competitors.slice(0, 5) : generateFallbackCompetitors(idea);
@@ -73,7 +87,8 @@ async function getAlternativeCompetitors(idea: string): Promise<Competitor[]> {
 function extractKeywords(idea: string): string[] {
   // List of important business-related terms that should be prioritized
   const businessTerms = ['tracking', 'validating', 'business', 'ideas', 'api', 'apis', 'ai', 
-                          'assistant', 'automation', 'platform', 'analytics', 'management', 'app'];
+                          'assistant', 'automation', 'platform', 'analytics', 'management', 'app',
+                          'fitness', 'workout', 'exercise', 'form', 'feedback', 'training'];
   
   // Extract keywords, prioritizing business terms
   const words = idea.toLowerCase().split(' ');
@@ -92,7 +107,7 @@ function extractKeywords(idea: string): string[] {
     : extractedKeywords.slice(0, 3);
 }
 
-function filterBusinessResults(results: any[], idea: string): Competitor[] {
+function filterAndDeduplicateResults(results: any[], idea: string): Competitor[] {
   // Extract keywords from the idea for relevance checking
   const keywords = extractKeywords(idea);
   
@@ -114,7 +129,7 @@ function filterBusinessResults(results: any[], idea: string): Competitor[] {
   ];
   
   // Filter results more strictly to focus on actual products and platforms
-  return results
+  const filtered = results
     .filter(result => {
       if (!result.title || !result.snippet || !result.link) {
         return false;
@@ -165,19 +180,36 @@ function filterBusinessResults(results: any[], idea: string): Competitor[] {
         description: result.snippet,
         website: result.link
       };
-    })
-    // Sort results to prioritize those that seem most relevant to the business idea
-    .sort((a, b) => {
-      const aRelevance = keywords.filter(kw => 
-        a.name.toLowerCase().includes(kw) || 
-        a.description.toLowerCase().includes(kw)
-      ).length;
-      
-      const bRelevance = keywords.filter(kw => 
-        b.name.toLowerCase().includes(kw) || 
-        b.description.toLowerCase().includes(kw)
-      ).length;
-      
-      return bRelevance - aRelevance;
     });
+
+  // Deduplicate the results by normalized company name
+  const seenCompanies = new Set<string>();
+  const deduplicated = filtered.filter(competitor => {
+    // Create a normalized version of the name for comparison
+    const normalizedName = competitor.name.toLowerCase().replace(/\s+/g, '');
+    
+    // Check if we've seen this company before
+    if (seenCompanies.has(normalizedName)) {
+      return false;
+    }
+    
+    // Add to seen set and keep this result
+    seenCompanies.add(normalizedName);
+    return true;
+  });
+    
+  // Sort results to prioritize those that seem most relevant to the business idea
+  return deduplicated.sort((a, b) => {
+    const aRelevance = keywords.filter(kw => 
+      a.name.toLowerCase().includes(kw) || 
+      a.description.toLowerCase().includes(kw)
+    ).length;
+    
+    const bRelevance = keywords.filter(kw => 
+      b.name.toLowerCase().includes(kw) || 
+      b.description.toLowerCase().includes(kw)
+    ).length;
+    
+    return bRelevance - aRelevance;
+  });
 }

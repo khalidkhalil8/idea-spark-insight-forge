@@ -23,9 +23,9 @@ const CompetitorsSection: React.FC<CompetitorsSectionProps> = ({ competitors }) 
       
       <div className="grid sm:grid-cols-2 gap-6 mb-10">
         {competitors.length > 0 ? (
-          competitors.map((competitor, index) => (
+          competitors.slice(0, 5).map((competitor, index) => (
             <CompetitorCard 
-              key={competitor.name} 
+              key={`${competitor.name}-${index}`} 
               {...competitor} 
               index={index + 1} 
             />

@@ -22,20 +22,18 @@ serve(async (req) => {
     }
 
     console.log(`Analyzing idea: ${idea}`);
-    let searchQuery = `${idea} apps site:.com | site:.co | site:.io -inurl:(blog | article | guide | how-to | news | review | podcast | forum | wiki | login | signup | about | pricing | resources)`;
-    console.log(`Search query used: ${searchQuery}`);
-
+    
     try {
       // Get competitors using SerpAPI with improved query construction
       const competitors = await getCompetitors(idea);
-      console.log(`Found ${competitors.length} competitors`);
+      console.log(`Found ${competitors.length} unique competitors`);
       
       try {
         // Get gap analysis using OpenAI with specific JSON formatting
         const analysisResult = await getGapAnalysis(idea, competitors);
         console.log("Successfully generated analysis using OpenAI");
         
-        // Return without including searchQuery in the response
+        // Return complete result
         return new Response(
           JSON.stringify({ ...analysisResult }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }

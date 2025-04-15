@@ -1,5 +1,8 @@
-import { serpApiKey, Competitor, corsHeaders } from "./utils.ts";
+import { Competitor, corsHeaders } from "./utils.ts";
 import { generateFallbackCompetitors } from "./fallbacks.ts";
+
+// Product Hunt API token stored in Supabase secrets
+const productHuntToken = Deno.env.get("PRODUCT_HUNT_API_TOKEN");
 
 export async function getCompetitors(idea: string): Promise<Competitor[]> {
   try {
@@ -9,29 +12,63 @@ export async function getCompetitors(idea: string): Promise<Competitor[]> {
     
     // Check if the idea is fitness-related and add specific keywords if needed
     const isFITNESS = fitnessKeywords.some(kw => idea.toLowerCase().includes(kw));
-    const extraKeywords = isFITNESS ? 'AI form feedback' : '';
+    const extraKeywords = isFITNESS ? 'fitness AI form feedback' : '';
     
-    // Improved search query focused on apps with fitness specialization if relevant
-    const searchTerm = `${idea} apps ${extraKeywords} site:.com | site:.co | site:.io -inurl:(blog | article | guide | how-to | news | review | podcast | forum | wiki | login | signup | about | pricing | resources)`;
-    console.log(`Searching for competitors with query: "${searchTerm}"`);
+    // Construct the GraphQL query for Product Hunt
+    const searchTerm = `${idea} ${extraKeywords}`;
+    console.log(`Searching for competitors with Product Hunt query: "${searchTerm}"`);
     
-    const response = await fetch(
-      `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(searchTerm)}&num=15&api_key=${serpApiKey}`
-    );
+    const graphqlQuery = {
+      query: `
+        query {
+          posts(first: 20, search: "${searchTerm}") {
+            edges {
+              node {
+                name
+                url
+                description
+                tagline
+              }
+            }
+          }
+        }
+      `
+    };
+    
+    const response = await fetch("https://api.producthunt.com/v2/api/graphql", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${productHuntToken}`,
+        "Accept": "application/json",
+      },
+      body: JSON.stringify(graphqlQuery),
+    });
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`SerpAPI error: ${errorText}`);
-      throw new Error(`SerpAPI request failed: ${response.status}`);
+      console.error(`Product Hunt API error: ${errorText}`);
+      throw new Error(`Product Hunt API request failed: ${response.status}`);
     }
     
     const data = await response.json();
-    let organicResults = data.organic_results || [];
     
-    console.log(`Found ${organicResults.length} initial results from SerpAPI`);
+    if (!data.data || !data.data.posts || !data.data.posts.edges) {
+      console.error("Unexpected response format from Product Hunt API:", data);
+      throw new Error("Invalid response format from Product Hunt API");
+    }
     
-    // Apply more stringent filtering and deduplication
-    let competitors = filterAndDeduplicateResults(organicResults, idea);
+    // Extract product data from response
+    const productResults = data.data.posts.edges.map((edge: any) => ({
+      name: edge.node.name,
+      description: edge.node.tagline || edge.node.description || "No description available",
+      website: edge.node.url
+    }));
+    
+    console.log(`Found ${productResults.length} initial results from Product Hunt API`);
+    
+    // Apply filtering and deduplication
+    let competitors = filterAndDeduplicateResults(productResults, idea);
     
     if (competitors.length < 5) {
       // Try alternative search if not enough competitors found
@@ -41,7 +78,7 @@ export async function getCompetitors(idea: string): Promise<Competitor[]> {
     console.log(`Returning ${Math.min(competitors.length, 5)} filtered competitors`);
     return competitors.slice(0, 5);
   } catch (error) {
-    console.error("Error getting competitors:", error);
+    console.error("Error getting competitors from Product Hunt:", error);
     return await getAlternativeCompetitors(idea);
   }
 }
@@ -54,27 +91,58 @@ async function getAlternativeCompetitors(idea: string): Promise<Competitor[]> {
     const isFITNESS = fitnessKeywords.some(kw => idea.toLowerCase().includes(kw));
     
     // Add fitness-specific terms if relevant
-    const domainSpecificTerms = isFITNESS ? 
-      'workout app | fitness tracker | exercise form | training app | gym tracker' : 
-      'software | app | platform | tool | product';
+    const specificTerms = isFITNESS ? 'fitness workout exercise' : keywords.join(' ');
     
     // More targeted search focusing on product-related terms
-    const searchTerm = `${keywords.join(' ')} ${domainSpecificTerms} site:.com | site:.co | site:.io -inurl:(blog | news | review | guide | resources)`;
-    console.log(`Trying alternative search: "${searchTerm}"`);
+    const searchTerm = `${specificTerms} app`;
+    console.log(`Trying alternative Product Hunt search: "${searchTerm}"`);
     
-    const response = await fetch(
-      `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(searchTerm)}&num=15&api_key=${serpApiKey}`
-    );
+    const graphqlQuery = {
+      query: `
+        query {
+          posts(first: 20, search: "${searchTerm}") {
+            edges {
+              node {
+                name
+                url
+                description
+                tagline
+              }
+            }
+          }
+        }
+      `
+    };
+    
+    const response = await fetch("https://api.producthunt.com/v2/api/graphql", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${productHuntToken}`,
+        "Accept": "application/json",
+      },
+      body: JSON.stringify(graphqlQuery),
+    });
     
     if (!response.ok) {
-      throw new Error(`Alternative SerpAPI request failed: ${response.status}`);
+      throw new Error(`Alternative Product Hunt API request failed: ${response.status}`);
     }
     
     const data = await response.json();
-    const organicResults = data.organic_results || [];
     
-    // Apply stricter filtering for the alternative search, with deduplication
-    const competitors = filterAndDeduplicateResults(organicResults, idea);
+    if (!data.data || !data.data.posts || !data.data.posts.edges) {
+      throw new Error("Invalid response format from Product Hunt API in alternative search");
+    }
+    
+    // Extract product data from response
+    const productResults = data.data.posts.edges.map((edge: any) => ({
+      name: edge.node.name,
+      description: edge.node.tagline || edge.node.description || "No description available",
+      website: edge.node.url
+    }));
+    
+    // Apply filtering and deduplication
+    const competitors = filterAndDeduplicateResults(productResults, idea);
     
     console.log(`Found ${competitors.length} competitors with alternative search`);
     return competitors.length > 0 ? competitors.slice(0, 5) : generateFallbackCompetitors(idea);
@@ -111,76 +179,23 @@ function filterAndDeduplicateResults(results: any[], idea: string): Competitor[]
   // Extract keywords from the idea for relevance checking
   const keywords = extractKeywords(idea);
   
-  // Additional irrelevant domains to filter out
-  const irrelevantDomains = [
-    'wikipedia.org', 'linkedin.com', 'medium.com', 'gartner.com', 
-    'forbes.com', 'capterra.com', 'g2.com', 'youtube.com', 'news.',
-    'blog.', 'reddit.com', 'quora.com', 'techcrunch.com', 'github.com',
-    'stackoverflow.com', 'cnn.com', 'bbc.com', 'nytimes.com', 'wsj.com',
-    'marketwatch.com', 'thestreet.com', 'bloomberg.com', 'fastcompany.com',
-    'entrepreneur.com', 'huffpost.com', 'businessinsider.com', 'inc.com',
-    'reviews', 'comparison', 'wiki'
-  ];
-  
-  const irrelevantTitlePatterns = [
-    'top', 'best', 'comparison', 'vs', 'versus', 'review', 'list', 'guide',
-    'how to', 'tutorial', 'tips', 'trends', 'news', 'overview', 'what is',
-    'resources', 'examples', 'ideas', 'case studies'
-  ];
-  
-  // Filter results more strictly to focus on actual products and platforms
-  const filtered = results
-    .filter(result => {
-      if (!result.title || !result.snippet || !result.link) {
-        return false;
-      }
-      
-      const titleLower = result.title.toLowerCase();
-      const snippetLower = result.snippet.toLowerCase();
-      const linkLower = result.link.toLowerCase();
-      
-      // Filter out irrelevant domains
-      if (irrelevantDomains.some(domain => linkLower.includes(domain))) {
-        return false;
-      }
-      
-      // Filter out irrelevant title patterns
-      if (irrelevantTitlePatterns.some(pattern => titleLower.includes(pattern))) {
-        return false;
-      }
-      
-      // Check for product-related terms in title or snippet
-      const productTerms = ['app', 'tool', 'platform', 'software', 'solution', 'product'];
-      const hasProductTerm = productTerms.some(term => 
-        titleLower.includes(term) || snippetLower.includes(term)
-      );
-      
-      // Check if the title or snippet contains at least one keyword from the idea
-      const hasRelevantKeyword = keywords.some(kw => 
-        titleLower.includes(kw) || snippetLower.includes(kw)
-      );
-      
-      // Prioritize results that seem like actual products/platforms
-      return hasProductTerm || hasRelevantKeyword;
-    })
-    .map(result => {
-      // Extract company name more carefully
-      let name = result.title;
-      
-      // Remove common suffixes like "- Product", "| Official Site", etc.
-      name = name.split(' - ')[0].split(' | ')[0].split(': ')[0];
-      
-      // Remove common website suffixes
-      if (name.includes('.com') || name.includes('.io') || name.includes('.ai')) {
-        name = name.replace(/\.(com|io|ai|org|net)/g, '');
-      }
-      
-      return {
-        name: name.trim(),
-        description: result.snippet,
-        website: result.link
-      };
-    });
+  // Filter results to focus on actual products and platforms
+  const filtered = results.filter(result => {
+    if (!result.name || !result.website) {
+      return false;
+    }
+    
+    const nameLower = result.name.toLowerCase();
+    const descriptionLower = result.description ? result.description.toLowerCase() : '';
+    
+    // Check if the title or description contains at least one keyword from the idea
+    const hasRelevantKeyword = keywords.some(kw => 
+      nameLower.includes(kw) || descriptionLower.includes(kw)
+    );
+    
+    // Prioritize results that seem like actual products/platforms
+    return hasRelevantKeyword || nameLower.includes('app') || descriptionLower.includes('app');
+  });
 
   // Deduplicate the results by normalized company name
   const seenCompanies = new Set<string>();

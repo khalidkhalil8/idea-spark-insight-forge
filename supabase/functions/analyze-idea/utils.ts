@@ -3,6 +3,7 @@
 
 export const serpApiKey = Deno.env.get("SERPAPI_API_KEY");
 export const openAiApiKey = Deno.env.get("OPENAI_API_KEY");
+export const productHuntApiToken = Deno.env.get("PRODUCT_HUNT_API_TOKEN");
 
 export const corsHeaders = {
   'Access-Control-Allow-Origin': '*',

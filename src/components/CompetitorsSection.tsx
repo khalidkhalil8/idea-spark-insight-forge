@@ -32,7 +32,7 @@ const CompetitorsSection: React.FC<CompetitorsSectionProps> = ({ competitors }) 
           ))
         ) : (
           <div className="col-span-2 p-4 bg-gray-50 rounded-md text-gray-700">
-            No competitors found. Try refining your search or check your API key.
+            No competitors found.
           </div>
         )}
       </div>

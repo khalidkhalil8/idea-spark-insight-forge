@@ -7,16 +7,18 @@ import { Competitor, corsHeaders, productHuntApiToken } from "./utils.ts";
 export async function searchProductHunt(searchTerm: string): Promise<Competitor[]> {
   console.log(`Searching Product Hunt with query: "${searchTerm}"`);
   
+  // Updated GraphQL query to use search field instead of posts with search argument
   const graphqlQuery = {
     query: `
       query {
-        posts(first: 20, search: "${searchTerm}") {
+        search(query: "${searchTerm}", first: 20) {
           edges {
             node {
-              name
-              url
-              description
-              tagline
+              ... on Product {
+                name
+                website
+                tagline
+              }
             }
           }
         }
@@ -25,6 +27,8 @@ export async function searchProductHunt(searchTerm: string): Promise<Competitor[
   };
   
   try {
+    console.log("Using Product Hunt API token:", productHuntApiToken ? "Set" : "Not set");
+    
     const response = await fetch("https://api.producthunt.com/v2/api/graphql", {
       method: "POST",
       headers: {
@@ -43,19 +47,21 @@ export async function searchProductHunt(searchTerm: string): Promise<Competitor[
     
     const data = await response.json();
     
-    if (!data.data || !data.data.posts || !data.data.posts.edges) {
+    if (!data.data || !data.data.search || !data.data.search.edges) {
       console.error("Unexpected response format from Product Hunt API:", data);
       throw new Error("Invalid response format from Product Hunt API");
     }
     
-    console.log(`Found ${data.data.posts.edges.length} results from Product Hunt API`);
+    console.log(`Found ${data.data.search.edges.length} results from Product Hunt API`);
     
-    // Extract product data from response
-    return data.data.posts.edges.map((edge: any) => ({
-      name: edge.node.name,
-      description: edge.node.tagline || edge.node.description || "No description available",
-      website: edge.node.url
-    }));
+    // Extract product data from response - updated for the new search query structure
+    return data.data.search.edges
+      .filter((edge: any) => edge.node && edge.node.name && edge.node.website)
+      .map((edge: any) => ({
+        name: edge.node.name,
+        description: edge.node.tagline || "No description available",
+        website: edge.node.website
+      }));
   } catch (error) {
     console.error("Error in searchProductHunt:", error);
     throw error;

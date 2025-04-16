@@ -14,11 +14,18 @@ const CompetitorCard: React.FC<CompetitorProps> = ({ name, description, website,
   // Format the domain for display
   const getDomain = (url: string) => {
     try {
-      const domain = new URL(url).hostname;
+      // Check if the URL has a protocol, if not add https://
+      const urlWithProtocol = url.startsWith('http') ? url : `https://${url}`;
+      const domain = new URL(urlWithProtocol).hostname;
       return domain.replace('www.', '');
     } catch (e) {
       return url;
     }
+  };
+
+  // Ensure website has a protocol for proper linking
+  const getFullUrl = (url: string) => {
+    return url.startsWith('http') ? url : `https://${url}`;
   };
 
   return (
@@ -30,7 +37,7 @@ const CompetitorCard: React.FC<CompetitorProps> = ({ name, description, website,
             {name}
           </h3>
           <a 
-            href={website} 
+            href={getFullUrl(website)} 
             target="_blank" 
             rel="noopener noreferrer"
             className="text-brand-600 hover:text-brand-800 transition-colors"
@@ -41,7 +48,7 @@ const CompetitorCard: React.FC<CompetitorProps> = ({ name, description, website,
         <div className="mt-1 text-sm text-gray-500">{getDomain(website)}</div>
         <p className="mt-2 text-gray-600 text-sm line-clamp-3">{description}</p>
         <a 
-          href={website} 
+          href={getFullUrl(website)} 
           target="_blank" 
           rel="noopener noreferrer" 
           className="mt-4 inline-flex items-center text-sm text-brand-600 hover:text-brand-800 transition-colors"

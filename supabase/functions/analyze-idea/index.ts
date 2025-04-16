@@ -24,7 +24,7 @@ serve(async (req) => {
     console.log(`Analyzing idea: ${idea}`);
     
     try {
-      // Get competitors using Product Hunt API with improved query construction
+      // Get competitors using SerpAPI with improved query construction
       const competitors = await getCompetitors(idea);
       console.log(`Found ${competitors.length} unique competitors`);
       
@@ -53,7 +53,7 @@ serve(async (req) => {
         );
       }
     } catch (apiError) {
-      console.error("API error:", apiError.message);
+      console.error("SerpAPI error:", apiError.message);
       
       // If API fails but we still want to attempt OpenAI analysis with fallback competitors
       const fallbackCompetitors = [
@@ -66,7 +66,7 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ 
             ...analysisResult,
-            serpApiError: `API Error: ${apiError.message}`
+            serpApiError: `SerpAPI Error: ${apiError.message}`
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
@@ -78,7 +78,7 @@ serve(async (req) => {
             ...fallbackAnalysis, 
             isOpenAiFallback: true,
             openAiError: `OpenAI Error: ${openAiError.message}`,
-            serpApiError: `API Error: ${apiError.message}`
+            serpApiError: `SerpAPI Error: ${apiError.message}`
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );

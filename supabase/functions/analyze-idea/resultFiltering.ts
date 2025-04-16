@@ -22,24 +22,45 @@ export function filterAndDeduplicateResults(results: any[], idea: string): Compe
       nameLower.includes(kw) || descriptionLower.includes(kw)
     );
     
+    // Filter out common non-app results
+    const isLikelyNonApp = 
+      nameLower.includes('wikipedia') || 
+      nameLower.includes('github') || 
+      nameLower.includes('linkedin') ||
+      nameLower.includes('youtube') ||
+      nameLower.includes('facebook') ||
+      nameLower.includes('twitter') ||
+      nameLower.includes('tiktok') ||
+      nameLower.includes('reddit');
+    
     // Prioritize results that seem like actual products/platforms
-    return hasRelevantKeyword || nameLower.includes('app') || descriptionLower.includes('app');
+    return hasRelevantKeyword && !isLikelyNonApp;
   });
 
-  // Deduplicate the results by normalized company name
-  const seenCompanies = new Set<string>();
+  // Deduplicate the results by normalized website domain
+  const seenDomains = new Set<string>();
   const deduplicated = filtered.filter(competitor => {
-    // Create a normalized version of the name for comparison
-    const normalizedName = competitor.name.toLowerCase().replace(/\s+/g, '');
-    
-    // Check if we've seen this company before
-    if (seenCompanies.has(normalizedName)) {
-      return false;
+    try {
+      // Extract domain from URL for deduplication
+      const url = new URL(competitor.website.startsWith('http') ? competitor.website : `https://${competitor.website}`);
+      const domain = url.hostname.replace('www.', '');
+      
+      // Check if we've seen this domain before
+      if (seenDomains.has(domain)) {
+        return false;
+      }
+      
+      // Add to seen set and keep this result
+      seenDomains.add(domain);
+      return true;
+    } catch (e) {
+      // If URL parsing fails, use the whole website string
+      if (seenDomains.has(competitor.website)) {
+        return false;
+      }
+      seenDomains.add(competitor.website);
+      return true;
     }
-    
-    // Add to seen set and keep this result
-    seenCompanies.add(normalizedName);
-    return true;
   });
     
   // Sort results to prioritize those that seem most relevant to the business idea

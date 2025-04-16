@@ -1,7 +1,7 @@
 
 import { Competitor } from "./utils.ts";
 import { generateFallbackCompetitors } from "./fallbacks.ts";
-import { searchProductHunt } from "./productHuntApi.ts";
+import { searchSerpApi } from "./serpApi.ts";
 import { extractKeywords, isFitnessIdea } from "./keywordExtraction.ts";
 import { filterAndDeduplicateResults } from "./resultFiltering.ts";
 
@@ -17,13 +17,13 @@ export async function getCompetitors(idea: string): Promise<Competitor[]> {
     // Construct the search term
     const searchTerm = `${idea} ${extraKeywords}`.trim();
     
-    // Search for competitors using Product Hunt API
-    const productResults = await searchProductHunt(searchTerm);
+    // Search for competitors using SerpAPI
+    const serpResults = await searchSerpApi(searchTerm);
     
-    console.log(`Found ${productResults.length} initial results from Product Hunt API`);
+    console.log(`Found ${serpResults.length} initial results from SerpAPI`);
     
     // Apply filtering and deduplication
-    let competitors = filterAndDeduplicateResults(productResults, idea);
+    let competitors = filterAndDeduplicateResults(serpResults, idea);
     
     if (competitors.length < 5) {
       // Try alternative search if not enough competitors found
@@ -33,7 +33,7 @@ export async function getCompetitors(idea: string): Promise<Competitor[]> {
     console.log(`Returning ${Math.min(competitors.length, 5)} filtered competitors`);
     return competitors.slice(0, 5);
   } catch (error) {
-    console.error("Error getting competitors from Product Hunt:", error);
+    console.error("Error getting competitors from SerpAPI:", error);
     return await getAlternativeCompetitors(idea);
   }
 }
@@ -52,13 +52,13 @@ async function getAlternativeCompetitors(idea: string): Promise<Competitor[]> {
     
     // More targeted search focusing on product-related terms
     const searchTerm = `${specificTerms} app`;
-    console.log(`Trying alternative Product Hunt search: "${searchTerm}"`);
+    console.log(`Trying alternative SerpAPI search: "${searchTerm}"`);
     
-    // Search for competitors using Product Hunt API with alternative search term
-    const productResults = await searchProductHunt(searchTerm);
+    // Search for competitors using SerpAPI with alternative search term
+    const serpResults = await searchSerpApi(searchTerm);
     
     // Apply filtering and deduplication
-    const competitors = filterAndDeduplicateResults(productResults, idea);
+    const competitors = filterAndDeduplicateResults(serpResults, idea);
     
     console.log(`Found ${competitors.length} competitors with alternative search`);
     return competitors.length > 0 ? competitors.slice(0, 5) : generateFallbackCompetitors(idea);

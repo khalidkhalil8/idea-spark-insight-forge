@@ -28,13 +28,18 @@ const CompetitorCard: React.FC<CompetitorProps> = ({ name, description, website,
     return url.startsWith('http') ? url : `https://${url}`;
   };
 
+  // Truncate long names
+  const truncateName = (name: string, maxLength = 30) => {
+    return name.length > maxLength ? name.substring(0, maxLength) + '...' : name;
+  };
+
   return (
     <Card className="shadow-card hover:shadow-lg transition-shadow duration-300">
       <CardContent className="p-6">
         <div className="flex justify-between items-start">
           <h3 className="text-lg font-medium text-gray-900">
             {index && <span className="inline-flex items-center justify-center w-6 h-6 bg-brand-100 text-brand-700 rounded-full mr-2">{index}</span>}
-            {name}
+            {truncateName(name)}
           </h3>
           <a 
             href={getFullUrl(website)} 
@@ -46,7 +51,6 @@ const CompetitorCard: React.FC<CompetitorProps> = ({ name, description, website,
           </a>
         </div>
         <div className="mt-1 text-sm text-gray-500">{getDomain(website)}</div>
-        <p className="mt-2 text-gray-600 text-sm line-clamp-3">{description}</p>
         <a 
           href={getFullUrl(website)} 
           target="_blank" 

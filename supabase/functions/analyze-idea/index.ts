@@ -24,7 +24,7 @@ serve(async (req) => {
     console.log(`Analyzing idea: ${idea}`);
     
     try {
-      // Get competitors using SerpAPI with improved query construction
+      // Get competitors using Product Hunt API with improved query construction
       const competitors = await getCompetitors(idea);
       console.log(`Found ${competitors.length} unique competitors`);
       
@@ -52,12 +52,12 @@ serve(async (req) => {
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-    } catch (serpApiError) {
-      console.error("SerpAPI error:", serpApiError.message);
+    } catch (apiError) {
+      console.error("API error:", apiError.message);
       
-      // If SerpAPI fails but we still want to attempt OpenAI analysis with fallback competitors
+      // If API fails but we still want to attempt OpenAI analysis with fallback competitors
       const fallbackCompetitors = [
-        { name: "No competitors found", description: "SerpAPI search failed", website: "#" }
+        { name: "No competitors found", description: "API search failed", website: "#" }
       ];
       
       try {
@@ -66,7 +66,7 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ 
             ...analysisResult,
-            serpApiError: `SerpAPI Error: ${serpApiError.message}`
+            serpApiError: `API Error: ${apiError.message}`
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
@@ -78,7 +78,7 @@ serve(async (req) => {
             ...fallbackAnalysis, 
             isOpenAiFallback: true,
             openAiError: `OpenAI Error: ${openAiError.message}`,
-            serpApiError: `SerpAPI Error: ${serpApiError.message}`
+            serpApiError: `API Error: ${apiError.message}`
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );

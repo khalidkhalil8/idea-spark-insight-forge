@@ -24,33 +24,40 @@ export async function searchProductHunt(searchTerm: string): Promise<Competitor[
     `
   };
   
-  const response = await fetch("https://api.producthunt.com/v2/api/graphql", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${productHuntApiToken}`,
-      "Accept": "application/json",
-    },
-    body: JSON.stringify(graphqlQuery),
-  });
-  
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error(`Product Hunt API error: ${errorText}`);
-    throw new Error(`Product Hunt API request failed: ${response.status}`);
+  try {
+    const response = await fetch("https://api.producthunt.com/v2/api/graphql", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${productHuntApiToken}`,
+        "Accept": "application/json",
+      },
+      body: JSON.stringify(graphqlQuery),
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Product Hunt API error (${response.status}): ${errorText}`);
+      throw new Error(`Product Hunt API request failed: ${response.status} ${errorText}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data.data || !data.data.posts || !data.data.posts.edges) {
+      console.error("Unexpected response format from Product Hunt API:", data);
+      throw new Error("Invalid response format from Product Hunt API");
+    }
+    
+    console.log(`Found ${data.data.posts.edges.length} results from Product Hunt API`);
+    
+    // Extract product data from response
+    return data.data.posts.edges.map((edge: any) => ({
+      name: edge.node.name,
+      description: edge.node.tagline || edge.node.description || "No description available",
+      website: edge.node.url
+    }));
+  } catch (error) {
+    console.error("Error in searchProductHunt:", error);
+    throw error;
   }
-  
-  const data = await response.json();
-  
-  if (!data.data || !data.data.posts || !data.data.posts.edges) {
-    console.error("Unexpected response format from Product Hunt API:", data);
-    throw new Error("Invalid response format from Product Hunt API");
-  }
-  
-  // Extract product data from response
-  return data.data.posts.edges.map((edge: any) => ({
-    name: edge.node.name,
-    description: edge.node.tagline || edge.node.description || "No description available",
-    website: edge.node.url
-  }));
 }

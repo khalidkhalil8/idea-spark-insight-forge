@@ -7,7 +7,7 @@ import { Competitor, corsHeaders, productHuntApiToken } from "./utils.ts";
 export async function searchProductHunt(searchTerm: string): Promise<Competitor[]> {
   console.log(`Searching Product Hunt with query: "${searchTerm}"`);
   
-  // Updated GraphQL query to use search field instead of posts with search argument
+  // GraphQL query using the search field with proper fragment for Product type
   const graphqlQuery = {
     query: `
       query {

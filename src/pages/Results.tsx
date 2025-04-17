@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Activity } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import EmailCaptureModal from '@/components/EmailCaptureModal';
 import IdeaDisplay from '@/components/IdeaDisplay';
 import ApiWarnings from '@/components/ApiWarnings';
 import MarketGapAnalysis from '@/components/MarketGapAnalysis';
@@ -27,7 +26,6 @@ interface AnalysisResults {
 const Results = () => {
   const [userIdea, setUserIdea] = useState<string>('');
   const [analysisResults, setAnalysisResults] = useState<AnalysisResults | null>(null);
-  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -103,20 +101,7 @@ const Results = () => {
       />
 
       <ResultActions 
-        onEmailCapture={() => setIsEmailModalOpen(true)} 
         onCopyResults={handleCopyResults}
-      />
-
-      <EmailCaptureModal 
-        open={isEmailModalOpen} 
-        onOpenChange={setIsEmailModalOpen}
-        resultsData={{
-          userIdea,
-          competitors: analysisResults.competitors,
-          marketGaps: analysisResults.marketGaps,
-          gapAnalysis: analysisResults.gapAnalysis,
-          positioningSuggestions: analysisResults.positioningSuggestions
-        }}
       />
     </div>
   );

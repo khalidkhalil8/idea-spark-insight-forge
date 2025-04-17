@@ -27,6 +27,3 @@ enabled = true
 [functions.analyze-idea]
 verify_jwt = false
 provide_jwt = false
-
-[functions.send-validation-email]
-verify_jwt = false

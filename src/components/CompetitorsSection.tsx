@@ -23,7 +23,7 @@ const CompetitorsSection: React.FC<CompetitorsSectionProps> = ({ competitors }) 
     <>
       <h2 className="text-2xl font-bold mb-4 flex items-center text-gray-900">
         <Search className="mr-2 h-6 w-6 text-brand-600" />
-        Competitors
+        What's Out There
       </h2>
       
       <div className="grid sm:grid-cols-2 gap-6 mb-10">

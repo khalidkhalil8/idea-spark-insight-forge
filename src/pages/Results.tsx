@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lightbulb } from 'lucide-react';
+import { Activity } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import EmailCaptureModal from '@/components/EmailCaptureModal';
 import IdeaDisplay from '@/components/IdeaDisplay';
@@ -80,12 +80,8 @@ const Results = () => {
     <div className="max-w-4xl mx-auto py-12 px-6">
       <div className="text-center mb-10">
         <div className="inline-flex items-center justify-center mb-4 bg-brand-100 text-brand-600 px-4 py-2 rounded-full">
-          <Lightbulb className="w-5 h-5 mr-2" />
-          Validation Results
+          <Activity className="w-5 h-5 mr-2" />
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-3">
-          Your Idea Analysis
-        </h1>
       </div>
 
       <ApiWarnings 

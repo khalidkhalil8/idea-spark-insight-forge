@@ -1,16 +1,14 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Lightbulb, TrendingUp, Search, Users } from 'lucide-react';
+import { Activity, TrendingUp, Search, Users } from 'lucide-react';
+
 const Landing = () => {
   return <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
       <section className="bg-gradient-to-b from-white to-gray-50 py-24 px-6">
         <div className="max-w-5xl mx-auto text-center">
-          <div className="inline-flex items-center justify-center mb-6 bg-brand-100 text-brand-800 px-4 py-2 rounded-full text-sm font-medium">
-            <Lightbulb className="w-4 h-4 mr-2" />
-            Startup Idea Validation Made Simple
-          </div>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">Have an Idea? Let Us Help You.</h1>
           <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
             Enter your idea and uncover competitors, market gaps, and unique positioning angles in seconds.
@@ -21,15 +19,17 @@ const Landing = () => {
                 Start Validating
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="text-lg px-8">
-              Learn More
-            </Button>
+            <Link to="#features">
+              <Button size="lg" variant="outline" className="text-lg px-8">
+                Learn More
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-6 bg-white">
+      <section id="features" className="py-20 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12">How It Works</h2>
           <div className="grid md:grid-cols-3 gap-8">
@@ -84,4 +84,5 @@ const Landing = () => {
       </section>
     </div>;
 };
+
 export default Landing;

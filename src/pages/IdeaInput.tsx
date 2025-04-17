@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
-import { Lightbulb, ArrowRight } from 'lucide-react';
+import { Activity, ArrowRight } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { analyzeIdea } from '@/utils/ideaAnalysis';
 import { useToast } from '@/hooks/use-toast';
@@ -52,8 +52,7 @@ const IdeaInput = () => {
         <>
           <div className="text-center mb-10">
             <div className="inline-flex items-center justify-center mb-4 bg-brand-100 text-brand-600 px-4 py-2 rounded-full">
-              <Lightbulb className="w-5 h-5 mr-2" />
-              Idea Validator
+              <Activity className="w-5 h-5 mr-2" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-3">
               Describe Your Business Idea

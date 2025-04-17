@@ -12,31 +12,93 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Save, Send, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from "@/integrations/supabase/client";
 
 interface EmailCaptureModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  resultsData?: {
+    userIdea: string;
+    competitors: {
+      name: string;
+      description: string;
+      website: string;
+    }[];
+    marketGaps?: string[];
+    gapAnalysis?: string;
+    positioningSuggestions: string[];
+  };
 }
 
-const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({ open, onOpenChange }) => {
+const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({ 
+  open, 
+  onOpenChange,
+  resultsData 
+}) => {
   const [email, setEmail] = useState('');
   const [sending, setSending] = useState(false);
   const { toast } = useToast();
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!resultsData) {
+      toast({
+        title: "Error",
+        description: "No results data available to send.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setSending(true);
     
-    // Simulate sending
-    setTimeout(() => {
-      setSending(false);
-      onOpenChange(false);
+    try {
+      // Format the results data for email
+      const marketGapsText = resultsData.marketGaps ? 
+        `\n\n## Market Gaps:\n${resultsData.marketGaps.map((gap, i) => `${i+1}. ${gap}`).join('\n')}` :
+        `\n\n## Market Gap Analysis:\n${resultsData.gapAnalysis}`;
+      
+      const competitorsText = `\n\n## What's Out There:\n${resultsData.competitors.map((c, i) => 
+        `${i+1}. [${c.name}](${c.website})`
+      ).join('\n')}`;
+      
+      const suggestionsText = `\n\n## Positioning Suggestions:\n${resultsData.positioningSuggestions.map((s, i) => 
+        `${i+1}. ${s}`
+      ).join('\n')}`;
+      
+      const formattedResults = `# Idea Validation Results\n\n## Your Idea:\n${resultsData.userIdea}${marketGapsText}${competitorsText}${suggestionsText}`;
+      
+      // Send the email using Supabase Functions
+      const { error } = await supabase.functions.invoke('send-validation-email', {
+        body: { 
+          email,
+          results: formattedResults,
+          subject: "Your Mogulate Idea Validation Results"
+        }
+      });
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
       toast({
-        title: "Results saved!",
+        title: "Results sent!",
         description: "We've sent the analysis to your email.",
         duration: 5000,
       });
-    }, 1500);
+      
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error sending email:", error);
+      toast({
+        title: "Error sending email",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setSending(false);
+    }
   };
   
   return (

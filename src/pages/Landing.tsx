@@ -13,15 +13,10 @@ const Landing = () => {
           <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
             Enter your idea and uncover competitors, market gaps, and unique positioning angles in seconds.
           </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
+          <div className="flex justify-center">
             <Link to="/validate">
               <Button size="lg" className="bg-brand-600 hover:bg-brand-700 text-lg px-8">
                 Start Validating
-              </Button>
-            </Link>
-            <Link to="#features">
-              <Button size="lg" variant="outline" className="text-lg px-8">
-                Learn More
               </Button>
             </Link>
           </div>

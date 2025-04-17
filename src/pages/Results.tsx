@@ -109,7 +109,14 @@ const Results = () => {
 
       <EmailCaptureModal 
         open={isEmailModalOpen} 
-        onOpenChange={setIsEmailModalOpen} 
+        onOpenChange={setIsEmailModalOpen}
+        resultsData={{
+          userIdea,
+          competitors: analysisResults.competitors,
+          marketGaps: analysisResults.marketGaps,
+          gapAnalysis: analysisResults.gapAnalysis,
+          positioningSuggestions: analysisResults.positioningSuggestions
+        }}
       />
     </div>
   );

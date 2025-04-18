@@ -7,25 +7,13 @@ import IdeaDisplay from '@/components/IdeaDisplay';
 import ApiWarnings from '@/components/ApiWarnings';
 import MarketGapAnalysis from '@/components/MarketGapAnalysis';
 import CompetitorsSection from '@/components/CompetitorsSection';
+import ValidationScore from '@/components/ValidationScore';
 import ResultActions from '@/components/ResultActions';
-
-interface AnalysisResults {
-  competitors: {
-    name: string;
-    description: string;
-    website: string;
-  }[];
-  marketGaps?: string[];
-  gapAnalysis?: string;
-  positioningSuggestions: string[];
-  isOpenAiFallback?: boolean;
-  openAiError?: string;
-  serpApiError?: string;
-}
+import { AnalysisResult, IdeaFormData } from '@/types/analysis';
 
 const Results = () => {
-  const [userIdea, setUserIdea] = useState<string>('');
-  const [analysisResults, setAnalysisResults] = useState<AnalysisResults | null>(null);
+  const [userIdea, setUserIdea] = useState<IdeaFormData | null>(null);
+  const [analysisResults, setAnalysisResults] = useState<AnalysisResult | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -38,27 +26,35 @@ const Results = () => {
       return;
     }
     
-    setUserIdea(storedIdea);
+    setUserIdea(JSON.parse(storedIdea));
     setAnalysisResults(JSON.parse(storedResults));
   }, [navigate]);
 
   const handleCopyResults = () => {
-    if (!analysisResults) return;
-    
-    const marketGapsText = analysisResults.marketGaps ? 
-      `Market Gaps:\n${analysisResults.marketGaps.map((gap, i) => `${i+1}. ${gap}`).join('\n')}` :
-      `Market Gap Analysis: ${analysisResults.gapAnalysis}`;
+    if (!analysisResults || !userIdea) return;
     
     const resultsText = `
-      My Idea: ${userIdea}
+      Problem: ${userIdea.problem}
+      Target Market: ${userIdea.targetMarket}
+      Unique Value: ${userIdea.uniqueValue}
+      Customer Acquisition: ${userIdea.customerAcquisition}
       
-      ${marketGapsText}
+      Validation Score: ${analysisResults.validationScore}/100
+      
+      Strengths:
+      ${analysisResults.strengths.map(s => `- ${s}`).join('\n')}
+      
+      Areas for Improvement:
+      ${analysisResults.weaknesses.map(w => `- ${w}`).join('\n')}
+      
+      Market Gaps:
+      ${analysisResults.marketGaps ? analysisResults.marketGaps.map(g => `- ${g}`).join('\n') : analysisResults.gapAnalysis}
       
       Competitors:
       ${analysisResults.competitors.map(c => `- ${c.name}: ${c.description} (${c.website})`).join('\n')}
       
       Positioning Suggestions:
-      ${analysisResults.positioningSuggestions.map((s, i) => `${i+1}. ${s}`).join('\n')}
+      ${analysisResults.positioningSuggestions.map(s => `- ${s}`).join('\n')}
     `;
     
     navigator.clipboard.writeText(resultsText).then(() => {
@@ -89,6 +85,12 @@ const Results = () => {
       />
 
       <IdeaDisplay userIdea={userIdea} />
+
+      <ValidationScore 
+        score={analysisResults.validationScore}
+        strengths={analysisResults.strengths}
+        weaknesses={analysisResults.weaknesses}
+      />
 
       <MarketGapAnalysis 
         marketGaps={analysisResults.marketGaps}

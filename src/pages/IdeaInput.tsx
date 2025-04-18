@@ -1,32 +1,36 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
-import { Activity, ArrowRight } from 'lucide-react';
+import { Activity } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { analyzeIdea } from '@/utils/ideaAnalysis';
 import { useToast } from '@/hooks/use-toast';
+import IdeaForm from '@/components/IdeaForm';
+import { IdeaFormData } from '@/types/analysis';
 
 const IdeaInput = () => {
-  const [idea, setIdea] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!idea.trim()) return;
-    
+  const handleSubmit = async (data: IdeaFormData) => {
     setLoading(true);
     
     try {
+      // Combine all form fields into a comprehensive description
+      const ideaDescription = `
+        Problem: ${data.problem}
+        Target Market: ${data.targetMarket}
+        Unique Value: ${data.uniqueValue}
+        Customer Acquisition: ${data.customerAcquisition}
+      `;
+      
       // Analyze the idea with real APIs
-      const analysis = await analyzeIdea(idea.trim());
+      const analysis = await analyzeIdea(ideaDescription);
       
       // Store results in session storage
-      sessionStorage.setItem('userIdea', idea);
+      sessionStorage.setItem('userIdea', JSON.stringify(data));
       sessionStorage.setItem('analysisResults', JSON.stringify(analysis));
       
       // Navigate to results page
@@ -64,38 +68,7 @@ const IdeaInput = () => {
 
           <Card className="shadow-card">
             <CardContent className="p-6">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-2">
-                  <label 
-                    htmlFor="idea-input" 
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Your Business Idea
-                  </label>
-                  <Textarea
-                    id="idea-input"
-                    value={idea}
-                    onChange={(e) => setIdea(e.target.value)}
-                    placeholder="A fitness app for remote workers that suggests quick desk workouts based on posture."
-                    className="min-h-[150px] resize-none"
-                    required
-                  />
-                  <p className="text-xs text-gray-500">
-                    Provide enough detail for us to understand your target market and value proposition.
-                  </p>
-                </div>
-
-                <div className="flex justify-end">
-                  <Button 
-                    type="submit" 
-                    className="bg-brand-600 hover:bg-brand-700 gap-2"
-                    disabled={!idea.trim()}
-                  >
-                    Validate My Idea
-                    <ArrowRight className="w-4 h-4" />
-                  </Button>
-                </div>
-              </form>
+              <IdeaForm onSubmit={handleSubmit} isLoading={loading} />
             </CardContent>
           </Card>
 

@@ -9,7 +9,7 @@ interface ValidationScoreProps {
   weaknesses: string[];
 }
 
-const ValidationScore: React.FC<ValidationScoreProps> = ({ score, strengths, weaknesses }) => {
+const ValidationScore: React.FC<ValidationScoreProps> = ({ score, strengths = [], weaknesses = [] }) => {
   return (
     <Card className="mb-8 shadow-card">
       <CardContent className="p-6">
@@ -30,9 +30,13 @@ const ValidationScore: React.FC<ValidationScoreProps> = ({ score, strengths, wea
               Strengths
             </h3>
             <ul className="space-y-2 pl-7 list-disc text-gray-600">
-              {strengths.map((strength, index) => (
-                <li key={index}>{strength}</li>
-              ))}
+              {strengths && strengths.length > 0 ? (
+                strengths.map((strength, index) => (
+                  <li key={index}>{strength}</li>
+                ))
+              ) : (
+                <li>No strengths identified yet.</li>
+              )}
             </ul>
           </div>
 
@@ -42,9 +46,13 @@ const ValidationScore: React.FC<ValidationScoreProps> = ({ score, strengths, wea
               Areas for Improvement
             </h3>
             <ul className="space-y-2 pl-7 list-disc text-gray-600">
-              {weaknesses.map((weakness, index) => (
-                <li key={index}>{weakness}</li>
-              ))}
+              {weaknesses && weaknesses.length > 0 ? (
+                weaknesses.map((weakness, index) => (
+                  <li key={index}>{weakness}</li>
+                ))
+              ) : (
+                <li>No areas for improvement identified yet.</li>
+              )}
             </ul>
           </div>
         </div>

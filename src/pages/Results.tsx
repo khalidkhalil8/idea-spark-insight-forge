@@ -26,9 +26,27 @@ const Results = () => {
       return;
     }
     
-    setUserIdea(JSON.parse(storedIdea));
-    setAnalysisResults(JSON.parse(storedResults));
-  }, [navigate]);
+    try {
+      const parsedIdea = JSON.parse(storedIdea);
+      const parsedResults = JSON.parse(storedResults);
+      
+      // Ensure results have the required properties
+      if (!parsedResults.strengths) parsedResults.strengths = [];
+      if (!parsedResults.weaknesses) parsedResults.weaknesses = [];
+      if (!parsedResults.validationScore && parsedResults.validationScore !== 0) parsedResults.validationScore = 50;
+      
+      setUserIdea(parsedIdea);
+      setAnalysisResults(parsedResults);
+    } catch (error) {
+      console.error('Error parsing stored data:', error);
+      toast({
+        title: "Error loading results",
+        description: "There was a problem loading your results. Please try again.",
+        variant: "destructive",
+      });
+      navigate('/validate');
+    }
+  }, [navigate, toast]);
 
   const handleCopyResults = () => {
     if (!analysisResults || !userIdea) return;
@@ -88,8 +106,8 @@ const Results = () => {
 
       <ValidationScore 
         score={analysisResults.validationScore}
-        strengths={analysisResults.strengths}
-        weaknesses={analysisResults.weaknesses}
+        strengths={analysisResults.strengths || []}
+        weaknesses={analysisResults.weaknesses || []}
       />
 
       <MarketGapAnalysis 

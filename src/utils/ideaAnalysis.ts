@@ -1,21 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-
-export interface CompetitorProfile {
-  name: string;
-  description: string;
-  website: string;
-}
-
-export interface AnalysisResult {
-  competitors: CompetitorProfile[];
-  marketGaps?: string[];
-  gapAnalysis?: string;
-  positioningSuggestions: string[];
-  isOpenAiFallback?: boolean;
-  openAiError?: string;
-  serpApiError?: string;
-}
+import { AnalysisResult } from "@/types/analysis";
 
 export const analyzeIdea = async (idea: string): Promise<AnalysisResult> => {
   try {
@@ -32,20 +17,33 @@ export const analyzeIdea = async (idea: string): Promise<AnalysisResult> => {
     // Log the received data to help with debugging
     console.log("Analysis results:", data);
     
-    // Validate the response structure
-    if (!data.competitors || !Array.isArray(data.competitors)) {
-      console.error("Invalid response structure - missing competitors array:", data);
-      throw new Error("Invalid analysis results: Missing competitors data");
-    }
+    // Validate and ensure required fields
+    const result: AnalysisResult = {
+      competitors: Array.isArray(data.competitors) ? data.competitors : [],
+      marketGaps: Array.isArray(data.marketGaps) ? data.marketGaps : undefined,
+      gapAnalysis: typeof data.gapAnalysis === 'string' ? data.gapAnalysis : undefined,
+      positioningSuggestions: Array.isArray(data.positioningSuggestions) ? data.positioningSuggestions : [],
+      validationScore: typeof data.validationScore === 'number' ? data.validationScore : 50,
+      strengths: Array.isArray(data.strengths) ? data.strengths : [],
+      weaknesses: Array.isArray(data.weaknesses) ? data.weaknesses : [],
+      isOpenAiFallback: data.isOpenAiFallback,
+      openAiError: data.openAiError,
+      serpApiError: data.serpApiError
+    };
     
-    if (!data.positioningSuggestions || !Array.isArray(data.positioningSuggestions)) {
-      console.error("Invalid response structure - missing positioningSuggestions array:", data);
-      throw new Error("Invalid analysis results: Missing positioning suggestions");
-    }
-    
-    return data as AnalysisResult;
+    return result;
   } catch (err) {
     console.error("Error analyzing idea:", err);
-    throw err;
+    
+    // Return a fallback result in case of error
+    const fallbackResult: AnalysisResult = {
+      competitors: [],
+      positioningSuggestions: ["Retry analysis for positioning suggestions"],
+      validationScore: 0,
+      strengths: [],
+      weaknesses: ["Unable to complete analysis. Please try again."]
+    };
+    
+    return fallbackResult;
   }
 };

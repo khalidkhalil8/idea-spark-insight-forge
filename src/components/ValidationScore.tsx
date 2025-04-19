@@ -1,15 +1,30 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { CheckCircle2, XCircle } from 'lucide-react';
+import { ScoreBreakdown } from '@/types/analysis';
 
 interface ValidationScoreProps {
   score: number;
   strengths: string[];
   weaknesses: string[];
+  scoreBreakdown: ScoreBreakdown;
 }
 
-const ValidationScore: React.FC<ValidationScoreProps> = ({ score, strengths = [], weaknesses = [] }) => {
+const ValidationScore: React.FC<ValidationScoreProps> = ({ 
+  score, 
+  strengths = [], 
+  weaknesses = [], 
+  scoreBreakdown 
+}) => {
+  const categories = [
+    { name: 'Problem Definition', score: scoreBreakdown?.problem || 0, max: scoreBreakdown?.maxScores.problem || 25 },
+    { name: 'Target Market', score: scoreBreakdown?.targetMarket || 0, max: scoreBreakdown?.maxScores.targetMarket || 25 },
+    { name: 'Unique Value', score: scoreBreakdown?.uniqueValue || 0, max: scoreBreakdown?.maxScores.uniqueValue || 25 },
+    { name: 'Customer Acquisition', score: scoreBreakdown?.customerAcquisition || 0, max: scoreBreakdown?.maxScores.customerAcquisition || 25 },
+  ];
+
   return (
     <Card className="mb-8 shadow-card">
       <CardContent className="p-6">
@@ -21,6 +36,23 @@ const ValidationScore: React.FC<ValidationScoreProps> = ({ score, strengths = []
             </div>
           </div>
           <h2 className="text-xl font-medium text-gray-900">Validation Score</h2>
+        </div>
+
+        <div className="mb-8">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Score Breakdown</h3>
+          <div className="space-y-4">
+            {categories.map((category) => (
+              <div key={category.name} className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">{category.name}</span>
+                  <span className="font-medium">
+                    {category.score}/{category.max}
+                  </span>
+                </div>
+                <Progress value={(category.score / category.max) * 100} />
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="space-y-6">

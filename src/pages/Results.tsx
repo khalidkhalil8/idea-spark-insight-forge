@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Activity } from 'lucide-react';
@@ -30,10 +29,23 @@ const Results = () => {
       const parsedIdea = JSON.parse(storedIdea);
       const parsedResults = JSON.parse(storedResults);
       
-      // Ensure results have the required properties
       if (!parsedResults.strengths) parsedResults.strengths = [];
       if (!parsedResults.weaknesses) parsedResults.weaknesses = [];
       if (!parsedResults.validationScore && parsedResults.validationScore !== 0) parsedResults.validationScore = 50;
+      if (!parsedResults.scoreBreakdown) {
+        parsedResults.scoreBreakdown = {
+          problem: 0,
+          targetMarket: 0,
+          uniqueValue: 0,
+          customerAcquisition: 0,
+          maxScores: {
+            problem: 25,
+            targetMarket: 25,
+            uniqueValue: 25,
+            customerAcquisition: 25
+          }
+        };
+      }
       
       setUserIdea(parsedIdea);
       setAnalysisResults(parsedResults);
@@ -106,8 +118,9 @@ const Results = () => {
 
       <ValidationScore 
         score={analysisResults.validationScore}
-        strengths={analysisResults.strengths || []}
-        weaknesses={analysisResults.weaknesses || []}
+        strengths={analysisResults.strengths}
+        weaknesses={analysisResults.weaknesses}
+        scoreBreakdown={analysisResults.scoreBreakdown}
       />
 
       <MarketGapAnalysis 

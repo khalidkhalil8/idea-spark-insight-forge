@@ -14,16 +14,27 @@ export const analyzeIdea = async (idea: string): Promise<AnalysisResult> => {
       throw new Error(`Analysis failed: ${error.message}`);
     }
 
-    // Log the received data to help with debugging
     console.log("Analysis results:", data);
     
-    // Validate and ensure required fields
+    // Validate and ensure required fields with score breakdown
     const result: AnalysisResult = {
       competitors: Array.isArray(data.competitors) ? data.competitors : [],
       marketGaps: Array.isArray(data.marketGaps) ? data.marketGaps : undefined,
       gapAnalysis: typeof data.gapAnalysis === 'string' ? data.gapAnalysis : undefined,
       positioningSuggestions: Array.isArray(data.positioningSuggestions) ? data.positioningSuggestions : [],
       validationScore: typeof data.validationScore === 'number' ? data.validationScore : 50,
+      scoreBreakdown: data.scoreBreakdown || {
+        problem: 0,
+        targetMarket: 0,
+        uniqueValue: 0,
+        customerAcquisition: 0,
+        maxScores: {
+          problem: 25,
+          targetMarket: 25,
+          uniqueValue: 25,
+          customerAcquisition: 25
+        }
+      },
       strengths: Array.isArray(data.strengths) ? data.strengths : [],
       weaknesses: Array.isArray(data.weaknesses) ? data.weaknesses : [],
       isOpenAiFallback: data.isOpenAiFallback,
@@ -35,11 +46,23 @@ export const analyzeIdea = async (idea: string): Promise<AnalysisResult> => {
   } catch (err) {
     console.error("Error analyzing idea:", err);
     
-    // Return a fallback result in case of error
+    // Return a fallback result with score breakdown
     const fallbackResult: AnalysisResult = {
       competitors: [],
       positioningSuggestions: ["Retry analysis for positioning suggestions"],
       validationScore: 0,
+      scoreBreakdown: {
+        problem: 0,
+        targetMarket: 0,
+        uniqueValue: 0,
+        customerAcquisition: 0,
+        maxScores: {
+          problem: 25,
+          targetMarket: 25,
+          uniqueValue: 25,
+          customerAcquisition: 25
+        }
+      },
       strengths: [],
       weaknesses: ["Unable to complete analysis. Please try again."]
     };

@@ -18,7 +18,7 @@ const Navbar = () => {
           </Link>
           <Link to="/validate">
             <Button className="bg-brand-600 hover:bg-brand-700 text-white">
-              Start Validating
+              Get Started
             </Button>
           </Link>
         </div>

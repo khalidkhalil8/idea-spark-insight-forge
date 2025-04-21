@@ -16,7 +16,7 @@ const Landing = () => {
           <div className="flex justify-center">
             <Link to="/validate">
               <Button size="lg" className="bg-brand-600 hover:bg-brand-700 text-lg px-8">
-                Start Validating
+                Get Started
               </Button>
             </Link>
           </div>
@@ -72,7 +72,7 @@ const Landing = () => {
           </p>
           <Link to="/validate">
             <Button size="lg" variant="secondary" className="text-brand-700 text-lg px-8">
-              Start Now — It's Free
+              Get Started — It's Free
             </Button>
           </Link>
         </div>

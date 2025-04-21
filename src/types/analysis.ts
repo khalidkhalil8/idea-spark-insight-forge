@@ -1,3 +1,4 @@
+
 export interface IdeaFormData {
   problem: string;
   targetMarket: string;
@@ -9,6 +10,14 @@ export interface CompetitorProfile {
   name: string;
   description: string;
   website: string;
+  gaps?: string[];
+}
+
+export interface ValidationProcess {
+  idea: string;
+  competitors: CompetitorProfile[];
+  differentiation: string;
+  validationPlan: string;
 }
 
 export interface ScoreBreakdown {

@@ -9,7 +9,27 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      openai_cache: {
+        Row: {
+          cache_key: string
+          created_at: string | null
+          id: number
+          results: Json
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string | null
+          id?: number
+          results: Json
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string | null
+          id?: number
+          results?: Json
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

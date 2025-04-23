@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check, Copy, ArrowRight } from 'lucide-react';
+import { Check, Copy, ArrowRight, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { CompetitorProfile } from '@/types/analysis';
@@ -45,7 +45,6 @@ const Summary = () => {
         title: "Copied to clipboard!",
         description: "Your idea validation summary has been copied.",
       });
-      
       // Reset the copied state after 2 seconds
       setTimeout(() => setIsCopied(false), 2000);
     }).catch(err => {
@@ -60,17 +59,12 @@ const Summary = () => {
   
   const generateSummaryText = () => {
     let summary = `# Idea Validation Summary\n\n`;
-    
-    // Add the idea
     summary += `## Your Idea\n${idea}\n\n`;
-    
-    // Add competitors and their gaps
     summary += `## Competitors Analysis\n`;
     competitors.forEach((competitor, index) => {
       summary += `### ${index + 1}. ${competitor.name}\n`;
       summary += `- Website: ${competitor.website}\n`;
       summary += `- Description: ${competitor.description}\n`;
-      
       if (competitor.gaps && competitor.gaps.length > 0) {
         summary += `- Market Gaps:\n`;
         competitor.gaps.forEach(gap => {
@@ -81,13 +75,8 @@ const Summary = () => {
       }
       summary += '\n';
     });
-    
-    // Add differentiation strategy
     summary += `## Differentiation Strategy\n${differentiation}\n\n`;
-    
-    // Add validation plan
     summary += `## Validation Plan\n${validationPlan}\n\n`;
-    
     return summary;
   };
   
@@ -100,6 +89,14 @@ const Summary = () => {
         <p className="text-gray-600">
           Review the information you've entered about your business idea.
         </p>
+      </div>
+
+      {/* Warning message */}
+      <div className="flex items-center bg-yellow-50 border border-yellow-300 text-yellow-700 rounded-md px-4 py-3 mb-6">
+        <AlertTriangle className="h-5 w-5 mr-2 text-yellow-500" />
+        <span>
+          <b>Warning:</b> Your data will <b>not be saved</b> if you enter a new idea. Please copy your summary if you wish to keep it!
+        </span>
       </div>
 
       <Card className="shadow-card mb-6">
@@ -127,7 +124,6 @@ const Summary = () => {
                   <h3 className="font-medium">{competitor.name}</h3>
                   <p className="text-sm text-gray-500 mb-2">{competitor.website}</p>
                   <p className="text-sm mb-2">{competitor.description}</p>
-                  
                   {competitor.gaps && competitor.gaps.length > 0 && (
                     <div>
                       <h4 className="text-sm font-medium">Market Gaps:</h4>
@@ -188,9 +184,13 @@ const Summary = () => {
         
         <Button 
           className="bg-brand-600 hover:bg-brand-700"
-          onClick={() => navigate('/results')}
+          onClick={() => {
+            // Clear sessionStorage to ensure new data entry
+            sessionStorage.clear();
+            navigate('/validate');
+          }}
         >
-          See Full Analysis
+          Enter a New Idea
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       </div>

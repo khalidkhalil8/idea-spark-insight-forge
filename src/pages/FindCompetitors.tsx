@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Activity, Plus, Search } from 'lucide-react';
@@ -141,16 +140,7 @@ const FindCompetitors = () => {
         <CardContent className="p-6">
           <div className="mb-6 flex justify-between items-center">
             <h2 className="text-xl font-semibold">Competitors</h2>
-            <div className="space-x-2">
-              <Button
-                variant="outline"
-                onClick={handleAddCompetitor}
-                className="flex items-center"
-                disabled={isSearching}
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Add More
-              </Button>
+            <div>
               <Button
                 onClick={handleFindCompetitors}
                 disabled={isSearching}
@@ -179,11 +169,22 @@ const FindCompetitors = () => {
             </div>
           )}
           
-          <StepNavigation 
-            nextPath="/gaps" 
-            isDisabled={competitors.filter(c => c.name.trim() !== '').length === 0}
-            onNext={handleSaveCompetitors}
-          />
+          <div className="flex justify-between items-center mt-6">
+            <Button
+              variant="outline"
+              onClick={handleAddCompetitor}
+              className="flex items-center"
+              disabled={isSearching}
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Add More
+            </Button>
+            <StepNavigation 
+              nextPath="/gaps" 
+              isDisabled={competitors.filter(c => c.name.trim() !== '').length === 0}
+              onNext={handleSaveCompetitors}
+            />
+          </div>
         </CardContent>
       </Card>
     </div>

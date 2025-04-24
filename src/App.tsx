@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,7 +8,6 @@ import Footer from "./components/Footer";
 import Landing from "./pages/Landing";
 import EnterIdea from "./pages/EnterIdea";
 import FindCompetitors from "./pages/FindCompetitors";
-import IdentifyGaps from "./pages/IdentifyGaps";
 import DifferentiationStrategy from "./pages/DifferentiationStrategy";
 import ValidationPlan from "./pages/ValidationPlan";
 import Summary from "./pages/Summary";
@@ -31,7 +29,6 @@ const App = () => (
               <Route path="/" element={<Landing />} />
               <Route path="/validate" element={<EnterIdea />} />
               <Route path="/competitors" element={<FindCompetitors />} />
-              <Route path="/gaps" element={<IdentifyGaps />} />
               <Route path="/differentiation" element={<DifferentiationStrategy />} />
               <Route path="/validation-plan" element={<ValidationPlan />} />
               <Route path="/summary" element={<Summary />} />

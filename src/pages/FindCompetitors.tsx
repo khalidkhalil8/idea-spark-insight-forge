@@ -180,7 +180,7 @@ const FindCompetitors = () => {
               Add More
             </Button>
             <StepNavigation 
-              nextPath="/gaps" 
+              nextPath="/differentiation" 
               isDisabled={competitors.filter(c => c.name.trim() !== '').length === 0}
               onNext={handleSaveCompetitors}
             />

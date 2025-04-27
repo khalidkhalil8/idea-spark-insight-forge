@@ -22,7 +22,7 @@ const EnterIdea = () => {
           Enter Your Idea
         </h1>
         <p className="text-gray-600">
-          Describe your business idea in detail so we can help you validate it.
+          Describe your idea in detail
         </p>
       </div>
 

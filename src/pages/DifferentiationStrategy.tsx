@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,10 +7,19 @@ import { useToast } from '@/hooks/use-toast';
 import StepNavigation from '@/components/StepNavigation';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { supabase } from "@/integrations/supabase/client";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const DifferentiationStrategy = () => {
   const [differentiation, setDifferentiation] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const { toast } = useToast();
   
   useEffect(() => {
@@ -36,6 +44,7 @@ const DifferentiationStrategy = () => {
     }
     
     setIsGenerating(true);
+    setShowConfirmDialog(false);
     
     try {
       const competitors = JSON.parse(competitorsData);
@@ -87,24 +96,21 @@ const DifferentiationStrategy = () => {
           What Will You Do Differently?
         </h1>
         <p className="text-gray-600">
-          Describe how your idea differentiates from existing solutions.
+          Detail your unique selling points, key differentiators, and how you'll solve customer problems better than existing solutions...
         </p>
       </div>
 
       <Card className="shadow-card mb-6">
         <CardContent className="p-6">
-          <div className="mb-6 flex justify-between items-center">
-            <label htmlFor="differentiation" className="block text-lg font-medium text-gray-700">
-              Your Differentiation Strategy
-            </label>
+          <div className="mb-6 flex justify-end">
             <Button
-              onClick={handleGetSuggestions}
+              onClick={() => setShowConfirmDialog(true)}
               disabled={isGenerating}
               variant="outline"
               className="flex items-center"
             >
               <Lightbulb className="h-4 w-4 mr-1" />
-              Need Help?
+              Get AI Suggestions
             </Button>
           </div>
           
@@ -117,7 +123,6 @@ const DifferentiationStrategy = () => {
               id="differentiation"
               value={differentiation}
               onChange={(e) => setDifferentiation(e.target.value)}
-              placeholder="Describe what makes your product unique and how it addresses the gaps in the market..."
               className="min-h-[250px]"
             />
           )}
@@ -129,6 +134,34 @@ const DifferentiationStrategy = () => {
           />
         </CardContent>
       </Card>
+
+      {/* Confirmation Dialog */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Generate Differentiation Suggestions</DialogTitle>
+            <DialogDescription>
+              Our AI will analyze your idea and competitors to suggest potential differentiation strategies.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-center">
+            <Button
+              type="button"
+              onClick={() => setShowConfirmDialog(false)}
+              variant="outline"
+              className="mr-2"
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="button" 
+              onClick={handleGetSuggestions}
+            >
+              Generate
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

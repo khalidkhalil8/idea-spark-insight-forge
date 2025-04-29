@@ -54,7 +54,7 @@ async function queryPerplexity(message: string): Promise<Competitor[]> {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.1-sonar-medium-128k-online',
+        model: 'llama-3.1-sonar-small-128k-online',  // Changed from medium to small which is a valid model
         messages: [
           {
             role: 'system',

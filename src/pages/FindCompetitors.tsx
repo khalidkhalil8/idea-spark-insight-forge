@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Activity, Plus, Search } from 'lucide-react';
@@ -85,17 +86,42 @@ const FindCompetitors = () => {
       
       if (error) throw new Error(error.message);
       
-      // Combine found competitors with user-entered ones (avoiding duplicates)
+      // Process the competitors data
       if (data && data.competitors && Array.isArray(data.competitors)) {
-        const existingNames = new Set(competitors.map(c => c.name.toLowerCase()));
+        // Filter out any invalid competitors (like headers or intro text)
+        const validCompetitors = data.competitors.filter(
+          (c: CompetitorProfile) => 
+            c.name && 
+            !c.name.toLowerCase().includes('here are') &&
+            !c.name.toLowerCase().includes('direct competitors')
+        );
         
-        const newCompetitors = data.competitors.filter(
+        if (validCompetitors.length === 0) {
+          toast({
+            title: "No valid competitors found",
+            description: "Try adding some manually or refining your idea description.",
+          });
+          return;
+        }
+        
+        // Check existing competitors to avoid duplicates
+        const existingNames = new Set(
+          competitors
+            .filter(c => c.name.trim() !== '')
+            .map(c => c.name.toLowerCase())
+        );
+        
+        // Filter out duplicates
+        const newCompetitors = validCompetitors.filter(
           (c: CompetitorProfile) => c.name && !existingNames.has(c.name.toLowerCase())
         );
         
         if (newCompetitors.length > 0) {
+          // Combine existing non-empty competitors with new ones
+          const nonEmptyCompetitors = competitors.filter(c => c.name.trim() !== '');
+          
           setCompetitors([
-            ...competitors.filter(c => c.name.trim() !== ''), 
+            ...nonEmptyCompetitors, 
             ...newCompetitors
           ]);
           
@@ -109,6 +135,12 @@ const FindCompetitors = () => {
             description: "Try adding some manually or refining your idea description.",
           });
         }
+      } else {
+        toast({
+          title: "No competitors data received",
+          description: "Please try again or add competitors manually.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Error finding competitors:", error);

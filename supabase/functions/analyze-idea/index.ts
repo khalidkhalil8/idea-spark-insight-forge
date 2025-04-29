@@ -4,7 +4,6 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { getCompetitors } from "./competitors.ts";
 import { getGapAnalysis } from "./analysis.ts";
 import { corsHeaders } from "./utils.ts";
-import { generateFallbackAnalysis } from "./fallbacks.ts";
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -13,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { idea } = await req.json();
+    const { idea, analysisType } = await req.json();
     if (!idea) {
       return new Response(
         JSON.stringify({ error: "Idea is required" }),
@@ -23,66 +22,66 @@ serve(async (req) => {
 
     console.log(`Analyzing idea: ${idea}`);
     
-    try {
-      // Get competitors using SerpAPI with improved query construction
-      const competitors = await getCompetitors(idea);
-      console.log(`Found ${competitors.length} unique competitors`);
-      
+    // If only competitors are requested, return them directly
+    if (analysisType === 'competitors-only') {
       try {
-        // Get gap analysis using OpenAI with specific JSON formatting
+        const competitors = await getCompetitors(idea);
+        return new Response(
+          JSON.stringify({ competitors }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      } catch (error) {
+        console.error("Error getting competitors:", error);
+        return new Response(
+          JSON.stringify({ error: error.message }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+    
+    // If only differentiation suggestions are requested
+    if (analysisType === 'differentiation-suggestions') {
+      try {
+        // Get competitors first
+        const competitors = await getCompetitors(idea);
+        
+        // Then get gap analysis with positioning suggestions
         const analysisResult = await getGapAnalysis(idea, competitors);
-        console.log("Successfully generated analysis using OpenAI");
         
-        // Return complete result
         return new Response(
-          JSON.stringify({ ...analysisResult }),
+          JSON.stringify({ positioningSuggestions: analysisResult.positioningSuggestions }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
-      } catch (openAiError) {
-        console.error("OpenAI analysis failed:", openAiError.message);
-        
-        // If OpenAI fails, use fallback but indicate this in the response
-        const fallbackAnalysis = await generateFallbackAnalysis(idea, competitors);
+      } catch (error) {
+        console.error("Error getting differentiation suggestions:", error);
         return new Response(
-          JSON.stringify({ 
-            ...fallbackAnalysis, 
-            isOpenAiFallback: true,
-            openAiError: `OpenAI Error: ${openAiError.message}` || "OpenAI API not responding—please try again."
-          }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({ error: error.message }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-    } catch (apiError) {
-      console.error("SerpAPI error:", apiError.message);
+    }
+    
+    // Default case: Full analysis
+    try {
+      // Get competitors using Perplexity API
+      const competitors = await getCompetitors(idea);
+      console.log(`Found ${competitors.length} competitors`);
       
-      // If API fails but we still want to attempt OpenAI analysis with fallback competitors
-      const fallbackCompetitors = [
-        { name: "No competitors found", description: "API search failed", website: "#" }
-      ];
+      // Get gap analysis using OpenAI
+      const analysisResult = await getGapAnalysis(idea, competitors);
+      console.log("Successfully generated analysis");
       
-      try {
-        // Try OpenAI analysis with fallback competitors
-        const analysisResult = await getGapAnalysis(idea, fallbackCompetitors);
-        return new Response(
-          JSON.stringify({ 
-            ...analysisResult,
-            serpApiError: `SerpAPI Error: ${apiError.message}`
-          }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      } catch (openAiError) {
-        // Both APIs failed
-        const fallbackAnalysis = generateFallbackAnalysis(idea, fallbackCompetitors);
-        return new Response(
-          JSON.stringify({ 
-            ...fallbackAnalysis, 
-            isOpenAiFallback: true,
-            openAiError: `OpenAI Error: ${openAiError.message}`,
-            serpApiError: `SerpAPI Error: ${apiError.message}`
-          }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+      // Return complete result
+      return new Response(
+        JSON.stringify(analysisResult),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    } catch (error) {
+      console.error("Error in analysis:", error);
+      return new Response(
+        JSON.stringify({ error: error.message }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
   } catch (error) {
     console.error("Error:", error.message);

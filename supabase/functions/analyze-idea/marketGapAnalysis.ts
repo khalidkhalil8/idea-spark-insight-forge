@@ -41,15 +41,32 @@ export async function getMarketGapAnalysis(idea: string, competitors: Competitor
  */
 function generateAnalysisPrompt(idea: string, competitorDescriptions: string): string {
   return `
-    Return a JSON object with 3 specific market gaps for the business idea "${idea}", based on industry trends, customer pain points, and opportunities. Each gap is a string, max 50 words, tailored to the idea's features.
+    You are analyzing a business idea: "${idea}".
     
-    Here are some potential competitors in this market space:
+    Here are the direct competitors in this market space:
     ${competitorDescriptions}
     
-    Your response MUST be a valid JSON object with exactly this format:
-    {"marketGaps": ["Lack of mobile tools for X", "No affordable Y for Z", "Unmet need for A in B"], "positioningSuggestions": ["Suggestion 1", "Suggestion 2", "Suggestion 3"]}
+    Based on these competitors and the business idea, please:
+    1. Identify 3 potential gaps in the market not addressed by these competitors
+    2. Suggest a unique angle or approach for this business idea
+    3. Recommend 3 specific features or positioning elements that would help differentiate this idea
     
-    Do not include any markdown, text, or explanations outside the JSON object. The JSON object should be the only thing in your response.
+    Format your response as a valid JSON object with this exact structure:
+    {
+      "marketGaps": [
+        "First gap description - make this a specific opportunity not addressed by competitors",
+        "Second gap description - another specific opportunity",
+        "Third gap description - another specific opportunity"
+      ],
+      "positioningSuggestions": [
+        "First positioning suggestion with specific feature or approach recommendation",
+        "Second positioning suggestion with specific feature or approach recommendation",
+        "Third positioning suggestion with specific feature or approach recommendation"
+      ]
+    }
+    
+    Make each description a separate paragraph with enough detail to be actionable (max 50 words each).
+    Do not include any text, markdown, or explanations outside the JSON object.
   `;
 }
 

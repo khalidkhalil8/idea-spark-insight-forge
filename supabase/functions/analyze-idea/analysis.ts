@@ -9,6 +9,6 @@ export async function getGapAnalysis(idea: string, competitors: Competitor[]): P
     return await getMarketGapAnalysis(idea, competitors);
   } catch (error) {
     console.error("Error getting gap analysis:", error);
-    throw error;
+    return generateFallbackAnalysis(idea, competitors);
   }
 }

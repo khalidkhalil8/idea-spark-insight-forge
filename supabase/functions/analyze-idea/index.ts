@@ -21,10 +21,12 @@ serve(async (req) => {
     }
 
     console.log(`Analyzing idea: ${idea}`);
+    console.log(`Analysis type: ${analysisType || 'full'}`);
     
     // If only competitors are requested, return them directly
     if (analysisType === 'competitors-only') {
       try {
+        console.log("Getting competitors only");
         const competitors = await getCompetitors(idea);
         return new Response(
           JSON.stringify({ competitors }),

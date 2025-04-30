@@ -16,11 +16,16 @@ export const analyzeIdea = async (idea: string): Promise<AnalysisResult> => {
 
     console.log("Analysis results:", data);
     
-    // Clean up competitors data
+    // Clean up competitors data and their descriptions
     const cleanedCompetitors = Array.isArray(data.competitors) 
       ? data.competitors.map(competitor => ({
           name: competitor.name || 'Unknown',
-          description: competitor.description || 'No description available',
+          description: competitor.description 
+            ? competitor.description
+                .replace(/\*\*/g, '') // Remove all ** instances
+                .replace(/\*/g, '')   // Remove all * instances
+                .trim()
+            : 'No description available',
           website: competitor.website && competitor.website !== '#' 
             ? competitor.website 
             : ''

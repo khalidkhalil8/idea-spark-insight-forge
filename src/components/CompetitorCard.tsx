@@ -11,11 +11,13 @@ export interface CompetitorProps {
 }
 
 const CompetitorCard: React.FC<CompetitorProps> = ({ name, description, website, index }) => {
-  // Clean up the description by removing asterisks and extra whitespace
+  // Clean up the description by removing all asterisks and extra whitespace
   const cleanDescription = (text: string) => {
+    if (!text) return '';
+    
     return text
-      .replace(/^\s*\*\*\s*|\s*\*\*\s*$/g, '') // Remove ** at start or end
-      .replace(/^\s*\*\s*/, '') // Remove * at start
+      .replace(/\*\*/g, '') // Remove all ** instances
+      .replace(/\*/g, '')   // Remove all * instances
       .trim();
   };
 

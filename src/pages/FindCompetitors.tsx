@@ -9,6 +9,7 @@ import StepNavigation from '@/components/StepNavigation';
 import { CompetitorProfile } from '@/types/analysis';
 import { supabase } from "@/integrations/supabase/client";
 import LoadingSpinner from '@/components/LoadingSpinner';
+import FindCompetitorsInfo from '@/components/FindCompetitorsInfo';
 
 const FindCompetitors = () => {
   const [competitors, setCompetitors] = useState<CompetitorProfile[]>([]);
@@ -160,9 +161,12 @@ const FindCompetitors = () => {
         <div className="inline-flex items-center justify-center mb-4 bg-brand-100 text-brand-600 px-4 py-2 rounded-full">
           <Search className="w-5 h-5 mr-2" />
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-3">
-          Finding Current Solutions
-        </h1>
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <h1 className="text-3xl font-bold text-gray-900">
+            Finding Current Solutions
+          </h1>
+          <FindCompetitorsInfo />
+        </div>
         <p className="text-gray-600">
           Add competitors to your idea or let us find them for you.
         </p>

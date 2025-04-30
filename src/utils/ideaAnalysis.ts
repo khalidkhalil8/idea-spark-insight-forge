@@ -16,9 +16,20 @@ export const analyzeIdea = async (idea: string): Promise<AnalysisResult> => {
 
     console.log("Analysis results:", data);
     
+    // Clean up competitors data
+    const cleanedCompetitors = Array.isArray(data.competitors) 
+      ? data.competitors.map(competitor => ({
+          name: competitor.name || 'Unknown',
+          description: competitor.description || 'No description available',
+          website: competitor.website && competitor.website !== '#' 
+            ? competitor.website 
+            : ''
+        }))
+      : [];
+    
     // Validate and ensure required fields with score breakdown
     const result: AnalysisResult = {
-      competitors: Array.isArray(data.competitors) ? data.competitors : [],
+      competitors: cleanedCompetitors,
       marketGaps: Array.isArray(data.marketGaps) ? data.marketGaps : undefined,
       gapAnalysis: typeof data.gapAnalysis === 'string' ? data.gapAnalysis : undefined,
       positioningSuggestions: Array.isArray(data.positioningSuggestions) ? data.positioningSuggestions : [],

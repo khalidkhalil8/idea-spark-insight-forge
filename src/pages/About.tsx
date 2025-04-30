@@ -7,15 +7,16 @@ import { Lightbulb, Target, CheckCircle } from 'lucide-react';
 const About = () => {
   return (
     <div className="max-w-4xl mx-auto py-12 px-6">
-      <div className="text-center mb-12">
-        <div className="inline-flex items-center justify-center mb-4 bg-brand-100 text-brand-600 px-4 py-2 rounded-full">
-          <Lightbulb className="w-5 h-5 mr-2" />
-          About Us
+      <div className="mb-12">
+        <div className="flex items-center mb-4">
+          <div className="bg-brand-100 text-brand-600 p-2 rounded-full">
+            <Lightbulb className="w-5 h-5" />
+          </div>
         </div>
         <h1 className="text-4xl font-bold text-gray-900 mb-4">
           We Help Validate Your Business Ideas
         </h1>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+        <p className="text-xl text-gray-600 max-w-2xl">
           Our mission is to help entrepreneurs and innovators test their ideas before investing significant time and resources.
         </p>
       </div>

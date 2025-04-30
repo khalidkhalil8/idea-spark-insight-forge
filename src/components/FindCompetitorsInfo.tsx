@@ -19,16 +19,16 @@ const FindCompetitorsInfo = () => {
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-left">
             <Search className="h-5 w-5 text-brand-600" />
             Finding Competition
           </DialogTitle>
         </DialogHeader>
-        <DialogDescription className="text-sm text-gray-600">
+        <DialogDescription className="text-sm text-gray-600 text-left">
           Our AI will analyze your idea and find competition in your market. Understanding existing solutions
           helps you identify gaps and opportunities for your product.
         </DialogDescription>
-        <div className="bg-blue-50 p-3 rounded-md border border-blue-100 mt-2">
+        <div className="bg-blue-50 p-3 rounded-md border border-blue-100 mt-2 text-left">
           <p className="text-sm text-blue-700">
             <strong>Tip:</strong> You can also manually add competitors if you already know them.
           </p>

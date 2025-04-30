@@ -53,7 +53,7 @@ const CompetitorsList: React.FC<CompetitorsListProps> = ({
         </div>
       )}
       
-      <div className="flex justify-between items-center mt-6">
+      <div className="mt-6">
         <Button
           variant="outline"
           onClick={onAddCompetitor}

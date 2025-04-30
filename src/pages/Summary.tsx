@@ -2,10 +2,21 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check, Copy, ArrowRight, AlertTriangle } from 'lucide-react';
+import { Check, Copy, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { CompetitorProfile } from '@/types/analysis';
+import ResultActions from '@/components/ResultActions';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Summary = () => {
   const [idea, setIdea] = useState('');
@@ -13,6 +24,7 @@ const Summary = () => {
   const [differentiation, setDifferentiation] = useState('');
   const [validationPlan, setValidationPlan] = useState('');
   const [isCopied, setIsCopied] = useState(false);
+  const [showNewIdeaWarning, setShowNewIdeaWarning] = useState(false);
   
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -79,6 +91,16 @@ const Summary = () => {
     summary += `## Validation Plan\n${validationPlan}\n\n`;
     return summary;
   };
+
+  const handleNewIdeaClick = () => {
+    setShowNewIdeaWarning(true);
+  };
+
+  const handleConfirmNewIdea = () => {
+    // Clear sessionStorage to ensure new data entry
+    sessionStorage.clear();
+    navigate('/validate');
+  };
   
   return (
     <div className="max-w-3xl mx-auto py-12 px-6">
@@ -89,14 +111,6 @@ const Summary = () => {
         <p className="text-gray-600">
           Review the information you've entered about your business idea.
         </p>
-      </div>
-
-      {/* Warning message */}
-      <div className="flex items-center bg-yellow-50 border border-yellow-300 text-yellow-700 rounded-md px-4 py-3 mb-6">
-        <AlertTriangle className="h-5 w-5 mr-2 text-yellow-500" />
-        <span>
-          <b>Warning:</b> Your data will <b>not be saved</b> if you enter a new idea. Please copy your summary if you wish to keep it!
-        </span>
       </div>
 
       <Card className="shadow-card mb-6">
@@ -184,16 +198,34 @@ const Summary = () => {
         
         <Button 
           className="bg-brand-600 hover:bg-brand-700"
-          onClick={() => {
-            // Clear sessionStorage to ensure new data entry
-            sessionStorage.clear();
-            navigate('/validate');
-          }}
+          onClick={handleNewIdeaClick}
         >
           Enter a New Idea
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       </div>
+
+      <AlertDialog open={showNewIdeaWarning} onOpenChange={setShowNewIdeaWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Warning</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your data will <span className="font-bold">not be saved</span> if you enter a new idea. 
+              Please copy your summary if you wish to keep it!
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmNewIdea}
+              className="bg-brand-600 hover:bg-brand-700"
+            >
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
     </div>
   );
 };

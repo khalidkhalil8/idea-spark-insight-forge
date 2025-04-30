@@ -65,10 +65,10 @@ const Landing = () => {
       <section className="py-20 px-6 bg-gradient-to-r from-brand-500 to-brand-700">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-white mb-6">
-            Ready to Validate Your Startup Idea?
+            Don't Waste Time and Resources
           </h2>
           <p className="text-xl text-white/90 mb-8">
-            Don't waste time and resources on ideas that might not work. Validate first, then build.
+            Before you build, understand the market behind your idea.
           </p>
           <Link to="/validate">
             <Button size="lg" variant="secondary" className="text-brand-700 text-lg px-8">

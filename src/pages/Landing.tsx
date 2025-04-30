@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Activity, TrendingUp, Search, Users } from 'lucide-react';
+import { Activity, TrendingUp, Search } from 'lucide-react';
 
 const Landing = () => {
   return <div className="flex flex-col min-h-screen">
@@ -11,7 +11,7 @@ const Landing = () => {
         <div className="max-w-5xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">Have an Idea? Let Us Help You.</h1>
           <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Enter your idea and uncover competitors, market gaps, and unique positioning angles in seconds.
+            Enter your idea and uncover competitors and market gaps in seconds.
           </p>
           <div className="flex justify-center">
             <Link to="/validate">
@@ -30,6 +30,16 @@ const Landing = () => {
           <div className="grid md:grid-cols-3 gap-8">
             <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-card text-center">
               <div className="bg-brand-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Activity className="text-brand-600 w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-medium mb-2">Enter Your Idea</h3>
+              <p className="text-gray-600">
+                Describe the concept of your idea
+              </p>
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-card text-center">
+              <div className="bg-brand-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Search className="text-brand-600 w-6 h-6" />
               </div>
               <h3 className="text-xl font-medium mb-2">Find Competitors</h3>
@@ -45,16 +55,6 @@ const Landing = () => {
               <h3 className="text-xl font-medium mb-2">Identify Market Gaps</h3>
               <p className="text-gray-600">
                 Our AI analysis helps you spot opportunities and gaps in the existing market.
-              </p>
-            </div>
-            
-            <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-card text-center">
-              <div className="bg-brand-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="text-brand-600 w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-medium mb-2">Position Your Idea</h3>
-              <p className="text-gray-600">
-                Get suggestions on how to differentiate your idea and reach your target audience.
               </p>
             </div>
           </div>

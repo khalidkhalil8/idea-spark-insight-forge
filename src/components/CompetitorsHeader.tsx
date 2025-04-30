@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Search } from 'lucide-react';
-import FindCompetitorsInfo from '@/components/FindCompetitorsInfo';
 
 const CompetitorsHeader: React.FC = () => {
   return (
@@ -13,7 +12,6 @@ const CompetitorsHeader: React.FC = () => {
         <h1 className="text-3xl font-bold text-gray-900">
           Finding Current Solutions
         </h1>
-        <FindCompetitorsInfo />
       </div>
       <p className="text-gray-600">
         Add competitors to your idea or let us find them for you.

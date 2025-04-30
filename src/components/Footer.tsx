@@ -6,7 +6,7 @@ const Footer = () => {
   return (
     <footer className="bg-white border-t border-gray-200 py-8 px-6 mt-auto">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+        <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="mb-4 md:mb-0">
             <p className="text-gray-600 text-sm">
               Mogulate

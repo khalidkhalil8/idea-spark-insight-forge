@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -33,7 +32,7 @@ const StepNavigation: React.FC<StepNavigationProps> = ({
   
   return (
     <div className="flex justify-between mt-6">
-      {previousPath ? (
+      {previousPath && (
         <Button
           variant="outline"
           onClick={handlePrevious}
@@ -42,7 +41,8 @@ const StepNavigation: React.FC<StepNavigationProps> = ({
           <ChevronLeft className="h-4 w-4 mr-1" />
           Previous
         </Button>
-      ) : <div />}
+      )}
+      {!previousPath && <div />}
       
       {nextPath && (
         <Button

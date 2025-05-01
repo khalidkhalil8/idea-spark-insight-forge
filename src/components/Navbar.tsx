@@ -1,25 +1,45 @@
+import React from "react";
+import { useLocation, Link } from "react-router-dom";
 
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Activity } from 'lucide-react';
+const Navbar: React.FC = () => {
+  const location = useLocation();
+  const path = location.pathname;
 
-const Navbar = () => {
+  // Function to determine the page title based on current path
+  const getPageTitle = () => {
+    switch (path) {
+      case "/":
+        return "Home";
+      case "/enter-idea":
+        return "Enter Idea";
+      case "/validate":
+        return "Validate Ideas";
+      case "/dashboard":
+        return "Dashboard";
+      default:
+        return "";
+    }
+  };
+
   return (
-    <nav className="border-b border-gray-200 py-4 px-6 bg-white">
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <Link to="/" className="flex items-center space-x-2">
-          <Activity className="h-6 w-6 text-brand-600" />
-          <span className="font-bold text-xl text-gray-900">Mogulate</span>
-        </Link>
-        <div className="flex items-center space-x-6">
-          <Link to="/" className="text-gray-600 hover:text-brand-600 transition-colors">
+    <nav className="bg-blue-600 text-white p-4">
+      <div className="container mx-auto flex justify-between items-center">
+        <div className="text-xl font-bold">Idea Spark</div>
+        <div className="text-lg">
+          {getPageTitle()}
+        </div>
+        <div className="space-x-4">
+          <Link to="/" className="hover:underline">
             Home
           </Link>
-          <Link to="/validate">
-            <Button className="bg-brand-600 hover:bg-brand-700 text-white">
-              Get Started
-            </Button>
+          <Link to="/enter-idea" className="hover:underline">
+            Enter Idea
+          </Link>
+          <Link to="/validate" className="hover:underline">
+            Validate
+          </Link>
+          <Link to="/dashboard" className="hover:underline">
+            Dashboard
           </Link>
         </div>
       </div>
